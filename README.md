@@ -13,6 +13,7 @@ The studio site. One landing page, a blog, and an admin panel to edit both.
 | `content/blog/*.md` | blog posts, one file each |
 | `admin/` | the studio: the admin panel, a static page |
 | `sync.mjs` | pulls content out of Supabase into the files above |
+| `tools/make-og.mjs` | renders `assets/og.jpg`, the link-preview card |
 | `supabase/` | schema.sql and seed.sql for the database |
 | `build.mjs` | turns the markdown into `/blog/` pages, plus sitemap and robots.txt |
 | `404.html` | not-found page |
@@ -48,9 +49,16 @@ npm run build          # content/ -> blog pages, 404, sitemap, robots.txt
 
 ## Deploying
 
-Pushing to `main` runs `.github/workflows/deploy.yml`: sync, build, publish to
-GitHub Pages. Set repository secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
-Without them the sync is a no-op and the committed content is published as-is.
+`.github/workflows/deploy.yml` runs on every push, once a day at 03:17 UTC,
+and on demand from the Actions tab. It syncs from Supabase, commits anything
+that moved, builds and publishes.
+
+It is deliberately one workflow rather than two. A push made with the built-in
+`GITHUB_TOKEN` does not trigger other workflows, so a separate sync job would
+have committed the studio's edits and left the site untouched.
+
+Set repository secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY`. Without them
+the sync is a no-op and the committed content is published as-is.
 
 ## The offline copy
 

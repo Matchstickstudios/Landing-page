@@ -845,8 +845,8 @@ async function show(tab) {
   view.textContent = "";
   view.append(el("div", { class: "note", html:
     'Changes are saved to Supabase immediately. The website rebuilds from it <b>once a day</b>, ' +
-    'or straight away if you run the <b>Sync content from Supabase</b> workflow: ' +
-    '<a href="https://github.com/Matchstickstudios/Landing-page/actions/workflows/sync.yml" target="_blank" rel="noopener">open it on GitHub</a> ' +
+    'or straight away if you run the <b>Deploy to GitHub Pages</b> workflow: ' +
+    '<a href="https://github.com/Matchstickstudios/Landing-page/actions/workflows/deploy.yml" target="_blank" rel="noopener">open it on GitHub</a> ' +
     'and press <b>Run workflow</b>.' }));
   try {
     await VIEWS[tab].render(view);
