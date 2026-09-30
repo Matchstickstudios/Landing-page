@@ -70,6 +70,8 @@
       <div class="barIn">
         <span class="logo">MATCHSTICK <span>studio</span></span>
         <span class="spacer"></span>
+        <button class="btn gho sm" id="preview" title="Open the site showing your unpublished changes">Preview</button>
+        <button class="btn sm" id="publish">Publish changes</button>
         <span class="who" id="who"></span>
         <button class="btn gho sm" id="out">Sign out</button>
       </div>
@@ -90,6 +92,19 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- publish confirmation -->
+<div class="modalBg" id="pubModal" hidden>
+  <div class="modal">
+    <h2 id="pubTitle">Publish changes?</h2>
+    <p id="pubBody">Everything saved in the studio will go live on the website.
+      It takes about a minute.</p>
+    <div class="modalActs" id="pubActs">
+      <button class="btn gho" id="pubCancel">Cancel</button>
+      <button class="btn" id="pubGo">Yes, publish</button>
+    </div>
+  </div>
+</div>
 
 <script type="module" src="studio.js"></script>
 </body>

@@ -814,12 +814,127 @@ async function saveAll() {
       }
     }
     clearDirty();
-    toast("Saved. Live on the site within a day, or publish now from the banner.");
+    toast("Saved. Press Publish changes to put it live.");
   } catch (e) {
     toast(e.message, true);
   } finally {
     btn.disabled = false;
   }
+}
+
+/* ---------------- publishing ----------------
+   The site is a set of static files. Saving writes to Supabase; the files are
+   rebuilt from it by a GitHub workflow. The button below starts that workflow
+   through an edge function, because GitHub will not take instructions from an
+   anonymous browser and a token that could give them must not be in this file.
+   Where the function is not deployed, the button says so and offers the link
+   rather than failing silently. */
+const REPO = "Matchstickstudios/Landing-page";
+
+function siteRoot() {
+  /* /admin/ -> the site it administers */
+  return location.pathname.replace(/\/admin\/?$/, "/") || "/";
+}
+
+async function startPublish() {
+  const r = await fetch(`${CFG.url}/functions/v1/publish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: CFG.key,
+               Authorization: `Bearer ${TOKEN}` },
+  });
+  if (r.status === 404)
+    throw new Error("NOFUNC");
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || `Could not start the publish (${r.status})`);
+  return d;
+}
+
+/* the repo is public, so the run's progress can be read without a token */
+async function watchRun(since) {
+  for (let i = 0; i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 5000));
+    try {
+      const r = await fetch(
+        `https://api.github.com/repos/${REPO}/actions/runs?per_page=5&event=workflow_dispatch`,
+        { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" });
+      if (!r.ok) continue;
+      const d = await r.json();
+      const run = (d.workflow_runs || []).find((x) => new Date(x.created_at) >= since);
+      if (!run) continue;
+      if (run.status === "completed") return run.conclusion;
+    } catch { /* keep waiting; a blip is not a failure */ }
+  }
+  return "timed_out";
+}
+
+function publishFlow() {
+  const bg = $("#pubModal"), title = $("#pubTitle"), body = $("#pubBody"), acts = $("#pubActs");
+  const close = () => { bg.hidden = true; };
+
+  title.textContent = "Publish changes?";
+  body.innerHTML = "Everything saved in the studio will go live on the website. " +
+    "It takes about a minute.";
+  acts.innerHTML = "";
+  const cancel = el("button", { class: "btn gho", onclick: close }, "Cancel");
+  const go = el("button", { class: "btn" }, "Yes, publish");
+  acts.append(cancel, go);
+  bg.hidden = false;
+
+  go.addEventListener("click", async () => {
+    acts.innerHTML = "";
+    title.textContent = "Publishing\u2026";
+    const steps = el("ul", { class: "steps" },
+      el("li", { class: "on" }, el("i", {}, "\u25cf"), "Asking GitHub to rebuild"),
+      el("li", {}, el("i", {}, "\u25cb"), "Pulling your content from Supabase"),
+      el("li", {}, el("i", {}, "\u25cb"), "Building and publishing"));
+    body.innerHTML = "";
+    body.append(el("p", {}, "Leave this open. It takes about a minute."), steps);
+    const mark = (i, cls) => { steps.children[i].className = cls;
+      steps.children[i].firstChild.textContent = cls === "done" ? "\u2713" : "\u25cf"; };
+
+    const since = new Date(Date.now() - 20000);
+    try {
+      await startPublish();
+      mark(0, "done"); mark(1, "on");
+      const outcome = await watchRun(since);
+      mark(1, "done"); mark(2, outcome === "success" ? "done" : "on");
+
+      if (outcome === "success") {
+        title.textContent = "Published";
+        body.innerHTML = "";
+        body.append(el("p", {}, "Your changes are live on the website now."));
+        acts.innerHTML = "";
+        acts.append(
+          el("button", { class: "btn gho", onclick: close }, "Close"),
+          el("a", { class: "btn", href: siteRoot() + "?v=" + Date.now(), target: "_blank",
+                    rel: "noopener", onclick: close }, "Open the website"));
+      } else {
+        title.textContent = outcome === "timed_out" ? "Still going" : "The publish failed";
+        body.innerHTML = "";
+        body.append(el("p", {}, outcome === "timed_out"
+          ? "It is taking longer than usual. It may still finish on its own."
+          : "GitHub reported a failure. The run log will say why."));
+        acts.innerHTML = "";
+        acts.append(el("button", { class: "btn gho", onclick: close }, "Close"),
+          el("a", { class: "btn", target: "_blank", rel: "noopener",
+            href: `https://github.com/${REPO}/actions` }, "See the run"));
+      }
+    } catch (e) {
+      title.textContent = e.message === "NOFUNC" ? "Publishing is not set up yet" : "Could not publish";
+      body.innerHTML = "";
+      if (e.message === "NOFUNC") {
+        body.append(
+          el("p", {}, "The publish function has not been deployed to Supabase yet, so this button cannot start the rebuild."),
+          el("p", {}, "Until it is, your changes still go live on the daily rebuild, or you can start one on GitHub."));
+      } else {
+        body.append(el("p", {}, e.message));
+      }
+      acts.innerHTML = "";
+      acts.append(el("button", { class: "btn gho", onclick: close }, "Close"),
+        el("a", { class: "btn", target: "_blank", rel: "noopener",
+          href: `https://github.com/${REPO}/actions/workflows/deploy.yml` }, "Open GitHub"));
+    }
+  });
 }
 
 /* ---------------- boot ---------------- */
@@ -843,11 +958,6 @@ async function show(tab) {
   for (const b of $("#tabs").children) b.classList.toggle("on", b.dataset.tab === tab);
   const view = $("#view");
   view.textContent = "";
-  view.append(el("div", { class: "note", html:
-    'Changes are saved to Supabase immediately. The website rebuilds from it <b>once a day</b>, ' +
-    'or straight away if you run the <b>Deploy to GitHub Pages</b> workflow: ' +
-    '<a href="https://github.com/Matchstickstudios/Landing-page/actions/workflows/deploy.yml" target="_blank" rel="noopener">open it on GitHub</a> ' +
-    'and press <b>Run workflow</b>.' }));
   try {
     await VIEWS[tab].render(view);
   } catch (e) {
@@ -931,6 +1041,15 @@ async function start() {
   $("#who").textContent = USER?.email || "";
   $("#out").addEventListener("click", signOut);
   $("#save").addEventListener("click", saveAll);
+  $("#publish").addEventListener("click", () => {
+    if (pending()) { toast("Save your changes first", true); return; }
+    publishFlow();
+  });
+  $("#preview").addEventListener("click", () => {
+    const sec = { site: "", team: "#crew", services: "#desk", projects: "#work",
+                  reasons: "#why", brief: "#brief", theme: "", posts: "", seo: "", analytics: "" }[currentTab] || "";
+    window.open(siteRoot() + "?preview=1" + sec, "_blank", "noopener");
+  });
   $("#discard").addEventListener("click", () => location.reload());
   window.addEventListener("beforeunload", (e) => {
     if (pending()) { e.preventDefault(); e.returnValue = ""; }

@@ -89,6 +89,61 @@ var CONTACT={phone:"+917904888874",whatsapp:"917904888874",email:"matchstickstud
 
 /* one fetch per file, in parallel, straight off the same origin the page came
    from. They are small and static, so the browser cache does the rest. */
+/* ---- preview -------------------------------------------------------------
+   With ?preview=1 the page reads the content straight out of Supabase instead
+   of the built files, so the studio can show what an edit will look like
+   before it is published. It is the same mapping the deploy does, which is why
+   it is written once here and handed to the renderer in the same shapes.
+   Read-only, and only reachable by asking for it. */
+function previewFromSupabase(){
+  var t = function(name,q){
+    return fetch(SUPA.url.replace(/\/$/,"")+"/rest/v1/"+name+"?"+(q||"select=*&order=sort.asc"),
+      {headers:{apikey:SUPA.key,Authorization:"Bearer "+SUPA.key},cache:"no-store"})
+      .then(function(r){if(!r.ok)throw new Error(name+": "+r.status);return r.json();});
+  };
+  return Promise.all([t("nav"),t("social"),t("ticker"),t("team"),t("services"),
+                      t("projects"),t("reasons"),t("brief_options"),
+                      t("settings","select=*&limit=1")])
+  .then(function(r){
+    var nav=r[0],social=r[1],ticker=r[2],team=r[3],services=r[4],
+        projects=r[5],reasons=r[6],opts=r[7],st=r[8][0]||{};
+    NAV    = nav.map(function(n){return [n.label,n.href.replace(/^#/,"")];});
+    SOCIAL = social.map(function(x){return [x.network,x.url];});
+    TICK   = ticker.map(function(x){return x.phrase;});
+    STORY  = st.story||"";
+    HUD    = (st.stats||[]).map(function(x){return [x.value,x.label];});
+    TEAM    = team.map(function(m){return {n:m.name,r:m.role,i:m.initials,d:m.bio,does:m.does||[]};});
+    CREWPOS = team.map(function(m){return {x:+m.pos_x,y:+m.pos_y,r:+m.pos_r};});
+    CH   = services.map(function(c){return {t:c.title,k:c.kicker,s:c.summary,
+             get:c.get_items||[],d30:c.first_30};});
+    WORK = projects.map(function(p){return {t:p.title,k:p.tag,d:p.summary,g:p.chips||[]};});
+    WHY  = reasons.map(function(w){return {t:w.title,d:w.body,x:+w.pos_x,y:+w.pos_y,r:+w.pos_r};});
+    var pick=function(q){return opts.filter(function(o){return o.question===q;});};
+    BRIEF={need:pick("services").map(function(o){return o.value;}),
+           who:pick("who").map(function(o){return o.value;}),
+           when:pick("when").map(function(o){return {v:o.value,e:o.emoji||""};})};
+    if(st.colors){var root=document.documentElement;
+      Object.keys(st.colors).forEach(function(k){root.style.setProperty("--"+k,st.colors[k]);});}
+    CONTACT={phone:st.phone||"",whatsapp:st.whatsapp||"",email:st.email||""};
+    showPreviewBadge();
+  });
+}
+function isPreview(){
+  return /(^|[?&])preview=1(&|$)/.test(location.search);
+}
+function showPreviewBadge(){
+  if(document.getElementById("pvBadge"))return;
+  var b=document.createElement("div");
+  b.id="pvBadge";
+  b.style.cssText="position:fixed;left:50%;top:0;transform:translateX(-50%);z-index:90;"
+   +"background:#FFB13D;color:#140802;font:600 12px/1 system-ui,sans-serif;"
+   +"padding:7px 16px;border-radius:0 0 10px 10px;letter-spacing:.04em;"
+   +"box-shadow:0 8px 24px -10px rgba(0,0,0,.8)";
+  b.textContent="PREVIEW \u00b7 unpublished changes";
+  document.addEventListener("DOMContentLoaded",function(){document.body.appendChild(b);});
+  if(document.body)document.body.appendChild(b);
+}
+
 function loadContent(){
   var names=["site","team","services","projects","why","brief","theme"];
   return Promise.all(names.map(function(n){
@@ -131,10 +186,11 @@ function loadContent(){
     return fetch("content/supabase.json",{cache:"no-cache"})
       .then(function(r){return r.ok?r.json():null;})
       .then(function(c){ if(c&&c.url&&c.anonKey){SUPA={url:c.url,key:c.anonKey};
+        if(isPreview())return previewFromSupabase();   /* the draft, not the build */
         /* after the page is up, never in its way */
         if("requestIdleCallback" in window)requestIdleCallback(countView);
         else setTimeout(countView,1200); } })
-      .catch(function(){});
+      .catch(function(e){ if(isPreview())throw e; });
   });
 }
 /* A nav entry is a section id by default; a full URL or a path points off the

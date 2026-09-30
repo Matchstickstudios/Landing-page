@@ -165,3 +165,30 @@ tbody tr:hover{background:rgba(240,234,224,.03)}
 .cbar:hover span{opacity:1}
 .range{display:flex;gap:6px;margin-bottom:16px}
 .exports{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+
+/* ---------- publish ---------- */
+.modalBg{position:fixed;inset:0;z-index:60;background:rgba(7,7,10,.82);
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+  display:grid;place-items:center;padding:20px}
+.modalBg[hidden]{display:none}
+.modal{width:min(440px,100%);background:var(--panel);border:1px solid var(--line2);
+  border-radius:16px;padding:26px;box-shadow:0 40px 90px -40px #000}
+.modal h2{margin:0 0 8px;font-size:19px;letter-spacing:-.01em}
+.modal p{margin:0;color:var(--ash2);font-size:14px;line-height:1.6}
+.modal p+p{margin-top:10px}
+.modalActs{display:flex;gap:9px;justify-content:flex-end;margin-top:22px}
+.modalActs .btn{min-width:104px;justify-content:center}
+.spin{display:inline-block;width:13px;height:13px;border-radius:50%;
+  border:2px solid rgba(20,8,2,.3);border-top-color:#140802;
+  animation:sp .7s linear infinite;margin-right:2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.steps{margin:16px 0 0;padding:0;list-style:none;font-size:13.5px}
+.steps li{display:flex;gap:9px;align-items:flex-start;padding:5px 0;color:var(--ash3)}
+.steps li.on{color:var(--ash)}
+.steps li.done{color:var(--ok)}
+.steps i{font-style:normal;width:15px;flex:0 0 auto;text-align:center}
+#publish[disabled]{opacity:.5}
+@media(max-width:760px){
+  .barIn{flex-wrap:wrap;height:auto;padding:10px 0;gap:8px}
+  .who{width:100%;order:9}
+}
