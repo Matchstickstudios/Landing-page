@@ -137,10 +137,19 @@ function loadContent(){
       .catch(function(){});
   });
 }
-/* a nav entry is a section id by default, but "/blog/" or a full URL is
-   taken at face value, so the bar can point off the page. */
+/* A nav entry is a section id by default; a full URL or a path points off the
+   page. A path needs care: this site is served from /<repo>/ on Pages, so a
+   root-absolute "/blog/" would leave the project entirely and 404. It is
+   resolved against the directory this page is served from, which is right
+   both here and on a site that really does sit at a domain root. */
 function navHref(id){
-  return (/^(https?:|\/|\.)/.test(id)) ? id : "#"+id;
+  if(/^https?:/i.test(id))return id;
+  if(id.charAt(0)==="/"){
+    var base=location.pathname.replace(/\/[^\/]*$/,"");
+    return base+id;
+  }
+  if(id.charAt(0)==="."||id.indexOf("/")>-1)return id;
+  return "#"+id;
 }
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
