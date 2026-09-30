@@ -203,6 +203,7 @@ for (const p of posts) {
 <title>Not here — ${esc(NAME)}</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="${esc(THEME.colors?.soot || "#07070A")}">
+${gaTag()}
 <link rel="icon" type="image/png" sizes="64x64" href="${base}/assets/favicon.png">
 <link rel="stylesheet" href="${base}/assets/site.css">
 <link rel="stylesheet" href="${base}/assets/blog.css">

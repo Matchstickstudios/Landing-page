@@ -16,12 +16,15 @@ create table if not exists seo (
   updated_at       timestamptz not null default now()
 );
 
-insert into seo (id, title, description, keywords, robots) values (
+insert into seo (id, title, description, keywords, twitter_handle,
+                 ga_measurement_id, robots) values (
   1,
   'Matchstick Studios — Branding, Creatives, Social & Ads',
-  'We light up what you are selling. Branding, creatives, social, Meta and Google ads, lead generation and websites — sharpest on property, and it travels.',
+  'We light up what you’re selling. Branding, creatives, social, Meta and Google ads, lead generation and websites — sharpest on property, and it travels.',
   array['branding','creative agency','social media marketing','meta ads','google ads',
         'lead generation','real estate marketing','Hosur']::text[],
+  '@matchstickstd',
+  'G-QL1ZBJQS89',
   'index,follow')
 on conflict (id) do nothing;
 
