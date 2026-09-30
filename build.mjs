@@ -22,6 +22,13 @@ const BASE = (process.env.SITE_URL || SITE.url || "").replace(/\/$/, "");
 
 /* SEO is edited in the admin and synced down; these are the fallbacks for a
    repo that has not run the migration yet. */
+/* an uploaded icon replaces the built-in one on every generated page */
+const BRAND = (() => {
+  const f = path.join(ROOT, "content/brand.json");
+  return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {};
+})();
+const ICON = BRAND.favicon || "assets/favicon.png";
+
 const SEO = (() => {
   const f = path.join(ROOT, "content/seo.json");
   const d = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {};
@@ -100,7 +107,7 @@ ${SEO.twitter ? `<meta name="twitter:site" content="${esc(SEO.twitter)}">` : ""}
 ${SEO.gsc ? `<meta name="google-site-verification" content="${esc(SEO.gsc)}">` : ""}
 ${SEO.bing ? `<meta name="msvalidate.01" content="${esc(SEO.bing)}">` : ""}
 ${gaTag()}
-<link rel="icon" type="image/png" sizes="64x64" href="${up}assets/favicon.png">
+<link rel="icon" href="${up}${ICON}">
 <link rel="stylesheet" href="${up}assets/site.css">
 <link rel="stylesheet" href="${up}assets/blog.css">
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ""}
@@ -204,7 +211,7 @@ for (const p of posts) {
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="${esc(THEME.colors?.soot || "#07070A")}">
 ${gaTag()}
-<link rel="icon" type="image/png" sizes="64x64" href="${base}/assets/favicon.png">
+<link rel="icon" href="${base}/${ICON}">
 <link rel="stylesheet" href="${base}/assets/site.css">
 <link rel="stylesheet" href="${base}/assets/blog.css">
 </head>

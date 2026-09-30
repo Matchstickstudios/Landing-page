@@ -101,6 +101,63 @@ changed += write("content/theme.json", {
   contact: { phone: s.phone || "", whatsapp: s.whatsapp || "", email: s.email || "" },
 });
 
+/* ---------- brand artwork and client logos ----------
+   The images are copied into assets/ rather than linked from Supabase. A
+   website whose logo disappears because a free database was paused is not a
+   website; once these are in the build they are ordinary static files. */
+async function grab(url, into) {
+  if (!url) return null;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(String(r.status));
+    const buf = Buffer.from(await r.arrayBuffer());
+    const ext = (url.match(/\.([a-z0-9]+)(?:\?|$)/i) || [, "png"])[1].toLowerCase();
+    const rel = `assets/${into}.${ext}`;
+    const f = path.join(ROOT, rel);
+    const prev = fs.existsSync(f) ? fs.readFileSync(f) : null;
+    if (prev && prev.equals(buf)) return rel;
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, buf);
+    console.log("  changed " + rel);
+    changed++;
+    return rel;
+  } catch (e) {
+    console.log(`  (could not fetch ${into}: ${e.message} — keeping what is committed)`);
+    return null;
+  }
+}
+
+const brand = {
+  logo: await grab(s.logo, "logo"),
+  favicon: await grab(s.favicon, "favicon-custom"),
+};
+
+let clients = [];
+try {
+  const rows = await table("clients");
+  clients = [];
+  for (const c of rows) {
+    const local = await grab(c.logo, `clients/${String(c.id)}`);
+    /* a client with no usable artwork is left out rather than rendered as a
+       broken image on the front page */
+    if (!local) continue;
+    clients.push({ name: c.name, logo: local, url: c.url || "" });
+  }
+} catch {
+  console.log("  (no clients table yet \u2014 skipping)");
+  clients = null;
+}
+
+changed += write("content/brand.json", {
+  logo: brand.logo || "",
+  favicon: brand.favicon || "",
+  clients: clients === null
+    ? (fs.existsSync(path.join(ROOT, "content/brand.json"))
+        ? JSON.parse(fs.readFileSync(path.join(ROOT, "content/brand.json"), "utf8")).clients || []
+        : [])
+    : clients,
+});
+
 /* ---------- seo ----------
    Added by a later migration, so its absence is not an error: a project that
    has not run 002_seo_analytics.sql keeps whatever is committed. */

@@ -192,3 +192,15 @@ tbody tr:hover{background:rgba(240,234,224,.03)}
   .barIn{flex-wrap:wrap;height:auto;padding:10px 0;gap:8px}
   .who{width:100%;order:9}
 }
+
+/* ---------- image fields ---------- */
+.imgF{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.imgThumb{width:112px;height:72px;flex:0 0 auto;border:1px solid var(--line);
+  border-radius:10px;background:
+    linear-gradient(45deg,rgba(240,234,224,.05) 25%,transparent 25%,transparent 75%,rgba(240,234,224,.05) 75%) 0 0/14px 14px,
+    linear-gradient(45deg,rgba(240,234,224,.05) 25%,transparent 25%,transparent 75%,rgba(240,234,224,.05) 75%) 7px 7px/14px 14px,
+    var(--soot2);
+  display:grid;place-items:center;overflow:hidden}
+.imgThumb img{max-width:96px;max-height:58px;width:auto;height:auto;display:block}
+.imgThumb span{font-size:11px;color:var(--ash3);letter-spacing:.06em;text-transform:uppercase}
+.imgActs{display:flex;gap:7px;align-items:center}

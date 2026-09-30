@@ -191,6 +191,67 @@ function toast(msg, bad) {
   t._t = setTimeout(() => t.classList.remove("on"), 2800);
 }
 
+/* ---------------- uploads ----------------
+   Straight into the brand bucket over the storage API. The file is named for
+   what it is plus the clock, so replacing a logo never collides with the old
+   one still sitting in a browser cache somewhere. */
+async function uploadImage(file, prefix) {
+  const okTypes = ["image/png", "image/jpeg", "image/svg+xml", "image/webp", "image/x-icon"];
+  if (!okTypes.includes(file.type))
+    throw new Error("PNG, JPEG, SVG, WebP or ICO only");
+  if (file.size > 3 * 1024 * 1024)
+    throw new Error("That file is over 3 MB. Save it smaller and try again.");
+
+  const ext = (file.name.match(/\.([a-z0-9]+)$/i) || [, "png"])[1].toLowerCase();
+  const path = `${prefix}-${Date.now().toString(36)}.${ext}`;
+  const r = await fetch(`${CFG.url}/storage/v1/object/brand/${path}`, {
+    method: "POST",
+    headers: { apikey: CFG.key, Authorization: `Bearer ${TOKEN}`,
+               "Content-Type": file.type, "x-upsert": "true" },
+    body: file,
+  });
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error(`Upload failed (${r.status}) ${t.slice(0, 140)}`);
+  }
+  return `${CFG.url}/storage/v1/object/public/brand/${path}`;
+}
+
+/* a picture field: shows what is there, takes a new one, or clears it */
+function imageField(current, onChange, { prefix = "img", note = "" } = {}) {
+  const wrap = el("div", { class: "imgF" });
+  const thumb = el("div", { class: "imgThumb" });
+  const paint = (url) => {
+    thumb.textContent = "";
+    if (url) thumb.append(el("img", { src: url, alt: "" }));
+    else thumb.append(el("span", {}, "none"));
+  };
+  paint(current);
+
+  const input = el("input", { type: "file", accept: "image/png,image/jpeg,image/svg+xml,image/webp,image/x-icon", hidden: "hidden" });
+  const pick = el("button", { class: "btn gho sm", type: "button", onclick: () => input.click() },
+    current ? "Replace" : "Upload");
+  const clear = el("button", { class: "btn gho sm", type: "button",
+    onclick: () => { paint(""); onChange(""); pick.textContent = "Upload"; } }, "Remove");
+
+  input.addEventListener("change", async () => {
+    const f = input.files?.[0];
+    if (!f) return;
+    pick.disabled = true; pick.textContent = "Uploading\u2026";
+    try {
+      const url = await uploadImage(f, prefix);
+      paint(url); onChange(url); pick.textContent = "Replace";
+      toast("Uploaded");
+    } catch (e) {
+      toast(e.message, true); pick.textContent = "Upload";
+    } finally { pick.disabled = false; input.value = ""; }
+  });
+
+  wrap.append(thumb, el("div", { class: "imgActs" }, pick, clear, input));
+  if (note) wrap.append(el("span", { class: "hint" }, note));
+  return wrap;
+}
+
 /* ---------------- field builders ---------------- */
 function field(label, hint, control) {
   return el("div", { class: "f" },
@@ -524,6 +585,46 @@ const VIEWS = {
         published: new Date().toISOString().slice(0, 10),
         excerpt: "", tags: [], body: "Write here.", draft: true,
       })));
+    },
+  },
+
+  brand: {
+    label: "Brand & clients",
+    async render(view) {
+      const st = DATA.settings[0];
+      view.append(el("h1", {}, "Brand"),
+        el("p", { class: "sub" }, "The mark in the bar and the icon in the browser tab. Both are copied into the site when it publishes, so the website never depends on this database being up to show them."));
+
+      const c1 = el("div", { class: "card" });
+      c1.append(field("Logo", "Shown in the bar beside the name. A transparent PNG or an SVG, about 140\u00d788.",
+        imageField(st.logo, (v) => { st.logo = v; mark("settings", st.id, "logo", v); },
+          { prefix: "logo", note: "Leave it empty to keep the matchstick the site was drawn with." })));
+      c1.append(field("Favicon", "The little icon in the browser tab. A square PNG, 64\u00d764 or larger.",
+        imageField(st.favicon, (v) => { st.favicon = v; mark("settings", st.id, "favicon", v); },
+          { prefix: "favicon" })));
+      view.append(c1);
+
+      view.append(el("h1", { style: "margin-top:30px" }, "Clients"),
+        el("p", { class: "sub" }, "The logos that run under the hero. Drag to reorder. A client with no logo is skipped rather than shown as a broken image."));
+
+      if (!DATA.clients) {
+        view.append(el("p", { class: "err" },
+          "The clients table does not exist yet. Run supabase/003_brand_clients.sql in the SQL editor."));
+        return;
+      }
+      view.append(recordList("clients", DATA.clients, {
+        title: (r) => r.name || "New client",
+        body: (card, r) => {
+          const m = (f) => (v) => { r[f] = v; mark("clients", r.id, f, v); };
+          card.append(el("div", { class: "row" },
+            field("Name", "Read out to screen readers, and shown if the image fails.",
+              text(r.name, m("name"))),
+            field("Link", "Optional. Where the logo goes when clicked.",
+              text(r.url, m("url"), { ph: "https://" }))));
+          card.append(field("Logo", "A transparent PNG or SVG reads best against the dark strip.",
+            imageField(r.logo, m("logo"), { prefix: "client" })));
+        },
+      }, () => ({ name: "New client", logo: "", url: "" })));
     },
   },
 
@@ -951,6 +1052,7 @@ async function loadAll() {
   Object.assign(DATA, { nav, social, ticker, team, services, projects, reasons, brief_options, settings, posts });
   /* added by a later migration: the panel still opens without it */
   DATA.seo = await getAll("seo", "select=*&limit=1").catch(() => []);
+  DATA.clients = await getAll("clients").catch(() => null);
 }
 
 async function show(tab) {
