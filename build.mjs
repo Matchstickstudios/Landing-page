@@ -158,6 +158,35 @@ for (const p of posts) {
   }));
 }
 
+/* ---------- 404 ----------
+   A project site lives under /<repo>/, so the not-found page cannot use
+   relative asset paths (it is served at any depth) or root-absolute ones
+   (they would resolve off the project path). It gets the base written in. */
+{
+  const base = BASE ? new global.URL(BASE).pathname.replace(/\/$/, "") : "";
+  out("404.html", `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Not here — ${esc(NAME)}</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="${esc(THEME.colors?.soot || "#07070A")}">
+<link rel="stylesheet" href="${base}/assets/site.css">
+<link rel="stylesheet" href="${base}/assets/blog.css">
+</head>
+<body class="lit">
+<div class="bWrap" style="min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding-top:0">
+  <p class="pMeta" style="margin-bottom:18px"><span class="pTag">404</span></p>
+  <h1 class="pTitle">This one<br>went out.</h1>
+  <p class="pLede">The page you were after is not here. The rest of the site still is.</p>
+  <p style="margin-top:32px"><a class="bBack" href="${base}/"><i>&#8592;</i>Back to the site</a></p>
+</div>
+</body>
+</html>
+`);
+}
+
 /* ---------- sitemap + robots ---------- */
 if (BASE) {
   const urls = [
