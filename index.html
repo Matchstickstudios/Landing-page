@@ -101,12 +101,15 @@ function previewFromSupabase(){
       {headers:{apikey:SUPA.key,Authorization:"Bearer "+SUPA.key},cache:"no-store"})
       .then(function(r){if(!r.ok)throw new Error(name+": "+r.status);return r.json();});
   };
+  /* clients arrived in a later migration; a project without the table must
+     still preview the rest rather than failing whole */
+  var clients=t("clients").catch(function(){return [];});
   return Promise.all([t("nav"),t("social"),t("ticker"),t("team"),t("services"),
                       t("projects"),t("reasons"),t("brief_options"),
-                      t("settings","select=*&limit=1")])
+                      t("settings","select=*&limit=1"),clients])
   .then(function(r){
     var nav=r[0],social=r[1],ticker=r[2],team=r[3],services=r[4],
-        projects=r[5],reasons=r[6],opts=r[7],st=r[8][0]||{};
+        projects=r[5],reasons=r[6],opts=r[7],st=r[8][0]||{},cl=r[9]||[];
     NAV    = nav.map(function(n){return [n.label,n.href.replace(/^#/,"")];});
     SOCIAL = social.map(function(x){return [x.network,x.url];});
     TICK   = ticker.map(function(x){return x.phrase;});
@@ -125,6 +128,17 @@ function previewFromSupabase(){
     if(st.colors){var root=document.documentElement;
       Object.keys(st.colors).forEach(function(k){root.style.setProperty("--"+k,st.colors[k]);});}
     CONTACT={phone:st.phone||"",whatsapp:st.whatsapp||"",email:st.email||""};
+
+    /* the brand artwork. In preview these are still the storage URLs — the
+       copy into assets/ happens when the site is built, which is the thing
+       being previewed as not yet done. */
+    BRAND={logo:st.logo||"", favicon:st.favicon||"",
+           clients:cl.filter(function(c){return c.logo;})
+                     .map(function(c){return {name:c.name,logo:c.logo,url:c.url||""};})};
+    if(BRAND.favicon){
+      var ic=document.querySelector('link[rel="icon"]');
+      if(ic)ic.href=BRAND.favicon;
+    }
     showPreviewBadge();
   });
 }

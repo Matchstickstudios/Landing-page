@@ -85,8 +85,11 @@
 
 <div class="saveBar" id="saveBar">
   <div class="wrap saveIn">
+    <button class="btn gho sm icon" id="undo" title="Undo" aria-label="Undo" disabled>&#8630;</button>
+    <button class="btn gho sm icon" id="redo" title="Redo" aria-label="Redo" disabled>&#8631;</button>
     <span class="msg" id="saveMsg"></span>
-    <button class="btn gho sm" id="discard">Discard</button>
+    <button class="btn gho sm" id="cancelAll" disabled>Cancel changes</button>
+    <button class="btn gho sm" id="savePreview">Save &amp; preview</button>
     <button class="btn" id="save">Save</button>
   </div>
 </div>

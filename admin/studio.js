@@ -165,6 +165,75 @@ const created = [];               // {table, row}
 const deleted = [];               // {table, id}
 let reordered = new Set();
 
+/* ---------------- history ----------------
+   Every edit goes through setField, which is the only place that knows both
+   what a value was and what it became. That is what undo needs, and it is why
+   the views no longer write to the row themselves. */
+const history = [];
+let redoStack = [];
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+function setField(table, row, field, value) {
+  if (same(row[field], value)) return;
+  history.push({ table, row, field, from: row[field], to: value });
+  redoStack = [];
+  row[field] = value;
+  mark(table, row.id, field, value);
+  paintHistory();
+}
+
+/* the shape every view uses: setter("team", row)("name") -> fn(value) */
+const setter = (table, row) => (field) => (value) => setField(table, row, field, value);
+
+function applyStep(step, dir) {
+  const v = dir === "undo" ? step.from : step.to;
+  step.row[step.field] = v;
+  mark(step.table, step.row.id, step.field, v);
+}
+
+function undo() {
+  const step = history.pop();
+  if (!step) return;
+  applyStep(step, "undo");
+  redoStack.push(step);
+  paintHistory();
+  show(currentTab);              /* the inputs must show what the data says */
+}
+
+function redo() {
+  const step = redoStack.pop();
+  if (!step) return;
+  applyStep(step, "redo");
+  history.push(step);
+  paintHistory();
+  show(currentTab);
+}
+
+/* back to how everything was when this session started */
+function cancelChanges() {
+  if (!history.length && !pending()) { toast("Nothing to cancel"); return; }
+  if (!confirm("Undo every change you have made since signing in?")) return;
+  while (history.length) {
+    const step = history.pop();
+    applyStep(step, "undo");
+  }
+  redoStack = [];
+  paintHistory();
+  show(currentTab);
+  toast(pending() ? "Reverted. Press Save to write that back." : "Reverted.");
+}
+
+function paintHistory() {
+  const u = $("#undo"), r = $("#redo");
+  if (u) { u.disabled = !history.length; u.title = history.length
+    ? `Undo: ${history[history.length - 1].field}` : "Nothing to undo"; }
+  if (r) { r.disabled = !redoStack.length; r.title = redoStack.length
+    ? `Redo: ${redoStack[redoStack.length - 1].field}` : "Nothing to redo"; }
+  const c = $("#cancelAll");
+  if (c) c.disabled = !history.length;
+  showSaveBar();
+}
+
 function mark(table, id, field, value) {
   if (!dirty.has(table)) dirty.set(table, new Map());
   const t = dirty.get(table);
@@ -179,9 +248,12 @@ function pending() {
 }
 function showSaveBar() {
   const n = pending();
-  $("#saveBar").classList.toggle("on", n > 0);
-  $("#saveMsg").textContent =
-    n === 0 ? "" : `${n} unsaved change${n === 1 ? "" : "s"}`;
+  const bar = $("#saveBar");
+  if (!bar) return;
+  bar.classList.toggle("on", n > 0 || history.length > 0);
+  $("#saveMsg").textContent = n === 0
+    ? (history.length ? "Saved" : "")
+    : `${n} unsaved change${n === 1 ? "" : "s"}`;
 }
 function clearDirty() { dirty.clear(); created.length = 0; deleted.length = 0; reordered = new Set(); showSaveBar(); }
 
@@ -363,9 +435,9 @@ const VIEWS = {
         title: (r) => r.label || "Untitled",
         body: (card, r) => {
           card.append(el("div", { class: "row" },
-            field("Link text", null, text(r.label, (v) => { r.label = v; mark("nav", r.id, "label", v); })),
+            field("Link text", null, text(r.label, setter("nav", r)("label"))),
             field("Points at", "#desk for a section on the page, /blog/ for a page of its own",
-              text(r.href, (v) => { r.href = v; mark("nav", r.id, "href", v); }))));
+              text(r.href, setter("nav", r)("href")))));
         },
       }, () => ({ label: "New link", href: "#desk" })));
 
@@ -373,27 +445,27 @@ const VIEWS = {
       view.append(recordList("social", DATA.social, {
         title: (r) => r.network,
         body: (card, r) => card.append(field("Profile URL", null,
-          text(r.url, (v) => { r.url = v; mark("social", r.id, "url", v); }))),
+          text(r.url, setter("social", r)("url")))),
       }, null));
 
       view.append(el("h1", { style: "font-size:16px;margin-top:26px" }, "Scrolling strip"));
       view.append(recordList("ticker", DATA.ticker, {
         title: (r) => r.phrase || "—",
         body: (card, r) => card.append(field("Phrase", null,
-          text(r.phrase, (v) => { r.phrase = v; mark("ticker", r.id, "phrase", v); }))),
+          text(r.phrase, setter("ticker", r)("phrase")))),
       }, () => ({ phrase: "New phrase" })));
 
       const s = DATA.settings[0];
       view.append(el("h1", { style: "font-size:16px;margin-top:26px" }, "Studio line & counters"));
       const card = el("div", { class: "card" });
       card.append(field("The studio story", "The paragraph under the team.",
-        text(s.story, (v) => { s.story = v; mark("settings", s.id, "story", v); }, { area: true })));
-      const stats = [...(s.stats || [])];
+        text(s.story, setter("settings", s)("story"), { area: true })));
+      let stats = (s.stats || []).map((x) => ({ ...x }));
       const statBox = el("div", { class: "row" });
       stats.forEach((st, i) => {
         statBox.append(el("div", {},
-          field("Number", null, text(st.value, (v) => { stats[i].value = v; s.stats = stats; mark("settings", s.id, "stats", stats); })),
-          field("Caption", null, text(st.label, (v) => { stats[i].label = v; s.stats = stats; mark("settings", s.id, "stats", stats); }))));
+          field("Number", null, text(st.value, (v) => { const n = stats.map((x) => ({ ...x })); n[i].value = v; setField("settings", s, "stats", n); stats = n; })),
+          field("Caption", null, text(st.label, (v) => { const n = stats.map((x) => ({ ...x })); n[i].label = v; setField("settings", s, "stats", n); stats = n; }))));
       });
       card.append(field("Counters", null, statBox));
       view.append(card);
@@ -408,7 +480,7 @@ const VIEWS = {
       view.append(recordList("team", DATA.team, {
         title: (r) => `${r.name || "New"} — ${r.role || ""}`,
         body: (card, r) => {
-          const m = (f) => (v) => { r[f] = v; mark("team", r.id, f, v); };
+          const m = setter("team", r);
           card.append(el("div", { class: "row" },
             field("Name", null, text(r.name, m("name"))),
             field("Role", null, text(r.role, m("role"))),
@@ -431,7 +503,7 @@ const VIEWS = {
       view.append(recordList("services", DATA.services, {
         title: (r) => r.title || "New service",
         body: (card, r) => {
-          const m = (f) => (v) => { r[f] = v; mark("services", r.id, f, v); };
+          const m = setter("services", r);
           card.append(el("div", { class: "row" },
             field("Service", null, text(r.title, m("title"))),
             field("Kicker", "The small word above the title.", text(r.kicker, m("kicker")))));
@@ -451,7 +523,7 @@ const VIEWS = {
       view.append(recordList("projects", DATA.projects, {
         title: (r) => r.title || "New project",
         body: (card, r) => {
-          const m = (f) => (v) => { r[f] = v; mark("projects", r.id, f, v); };
+          const m = setter("projects", r);
           card.append(el("div", { class: "row" },
             field("Title", null, text(r.title, m("title"))),
             field("Tag", "The chip on the artwork.", text(r.tag, m("tag")))));
@@ -469,7 +541,7 @@ const VIEWS = {
       view.append(recordList("reasons", DATA.reasons, {
         title: (r) => r.title || "New reason",
         body: (card, r) => {
-          const m = (f) => (v) => { r[f] = v; mark("reasons", r.id, f, v); };
+          const m = setter("reasons", r);
           card.append(field("Reason", null, text(r.title, m("title"))));
           card.append(field("Body", null, text(r.body, m("body"), { area: true })));
           card.append(field("Scatter position (desktop)", "x %, y %, rotation °",
@@ -496,7 +568,7 @@ const VIEWS = {
         view.append(recordList("brief_options", rows, {
           title: (r) => (r.emoji ? r.emoji + " " : "") + (r.value || "New"),
           body: (card, r) => {
-            const m = (f) => (v) => { r[f] = v; mark("brief_options", r.id, f, v); };
+            const m = setter("brief_options", r);
             card.append(el("div", { class: "row" },
               field("Answer", null, text(r.value, m("value"))),
               q === "when" ? field("Face", "One emoji.", text(r.emoji, m("emoji"))) : null));
@@ -524,14 +596,14 @@ const VIEWS = {
         const code = el("code", {}, colors[k] || "#000000");
         const inp = el("input", { type: "color", value: colors[k] || "#000000" });
         inp.addEventListener("input", () => {
-          colors[k] = inp.value; code.textContent = inp.value;
-          s.colors = colors; mark("settings", s.id, "colors", colors);
+          code.textContent = inp.value;
+          setField("settings", s, "colors", { ...s.colors, [k]: inp.value });
         });
         box.append(el("div", { class: "sw" }, inp, el("div", {}, el("b", {}, label), code)));
       }
       view.append(el("div", { class: "card" }, field("Palette", null, box)));
 
-      const m = (f) => (v) => { s[f] = v; mark("settings", s.id, f, v); };
+      const m = setter("settings", s);
       view.append(el("div", { class: "card" }, el("div", { class: "row" },
         field("Phone", "Used for the call link.", text(s.phone, m("phone"))),
         field("WhatsApp", "Country code, no +.", text(s.whatsapp, m("whatsapp"))),
@@ -547,7 +619,7 @@ const VIEWS = {
       view.append(recordList("posts", DATA.posts, {
         title: (r) => r.title || "Untitled",
         body: (card, r) => {
-          const m = (f) => (v) => { r[f] = v; mark("posts", r.id, f, v); };
+          const m = setter("posts", r);
           card.append(el("div", { class: "cardTop", style: "margin:6px 0 0" },
             el("span", { class: "pill " + (r.draft ? "draft" : "live") }, r.draft ? "Draft" : "Published"),
             el("span", { class: "pill" }, r.published)));
@@ -600,10 +672,10 @@ const VIEWS = {
 
       const c1 = el("div", { class: "card" });
       c1.append(field("Logo", "Shown in the bar beside the name. A transparent PNG or an SVG, about 140\u00d788.",
-        imageField(st.logo, (v) => { st.logo = v; mark("settings", st.id, "logo", v); },
+        imageField(st.logo, setter("settings", st)("logo"),
           { prefix: "logo", note: "Leave it empty to keep the matchstick the site was drawn with." })));
       c1.append(field("Favicon", "The little icon in the browser tab. A square PNG, 64\u00d764 or larger.",
-        imageField(st.favicon, (v) => { st.favicon = v; mark("settings", st.id, "favicon", v); },
+        imageField(st.favicon, setter("settings", st)("favicon"),
           { prefix: "favicon" })));
       view.append(c1);
 
@@ -618,7 +690,7 @@ const VIEWS = {
       view.append(recordList("clients", DATA.clients, {
         title: (r) => r.name || "New client",
         body: (card, r) => {
-          const m = (f) => (v) => { r[f] = v; mark("clients", r.id, f, v); };
+          const m = setter("clients", r);
           card.append(el("div", { class: "row" },
             field("Name", "Read out to screen readers, and shown if the image fails.",
               text(r.name, m("name"))),
@@ -643,7 +715,7 @@ const VIEWS = {
         return;
       }
       const o = rows[0];
-      const m = (f) => (v) => { o[f] = v; mark("seo", o.id, f, v); };
+      const m = setter("seo", o);
       const c1 = el("div", { class: "card" });
       c1.append(field("Page title", "What shows in the tab and as the headline in search results. Around 60 characters.",
         text(o.title, m("title"))));
@@ -908,6 +980,7 @@ async function renderMd(src) {
 /* ---------------- saving ---------------- */
 async function saveAll() {
   const btn = $("#save");
+  if (!pending()) return true;
   btn.disabled = true;
   try {
     for (const { table, id } of deleted) await remove(table, id);
@@ -919,8 +992,10 @@ async function saveAll() {
     }
     clearDirty();
     toast("Saved. Press Publish changes to put it live.");
+    return true;
   } catch (e) {
     toast(e.message, true);
+    return false;
   } finally {
     btn.disabled = false;
   }
@@ -1146,6 +1221,26 @@ async function start() {
   $("#who").textContent = USER?.email || "";
   $("#out").addEventListener("click", signOut);
   $("#save").addEventListener("click", saveAll);
+  $("#undo").addEventListener("click", undo);
+  $("#redo").addEventListener("click", redo);
+  $("#cancelAll").addEventListener("click", cancelChanges);
+  $("#savePreview").addEventListener("click", async () => {
+    /* the window is opened before the await: a pop-up blocker only trusts one
+       that was opened while the click was still being handled */
+    const w = window.open("", "_blank", "noopener");
+    const ok = await saveAll();
+    const url = siteRoot() + "?preview=1&v=" + Date.now();
+    if (w) { w.location = url; } else if (ok) { window.open(url, "_blank", "noopener"); }
+  });
+  /* the shortcuts anyone editing expects */
+  document.addEventListener("keydown", (e) => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (!mod) return;
+    const k = e.key.toLowerCase();
+    if (k === "s") { e.preventDefault(); saveAll(); }
+    else if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+  });
   $("#publish").addEventListener("click", () => {
     if (pending()) { toast("Save your changes first", true); return; }
     publishFlow();
@@ -1155,7 +1250,7 @@ async function start() {
                   reasons: "#why", brief: "#brief", theme: "", posts: "", seo: "", analytics: "" }[currentTab] || "";
     window.open(siteRoot() + "?preview=1" + sec, "_blank", "noopener");
   });
-  $("#discard").addEventListener("click", () => location.reload());
+
   window.addEventListener("beforeunload", (e) => {
     if (pending()) { e.preventDefault(); e.returnValue = ""; }
   });
