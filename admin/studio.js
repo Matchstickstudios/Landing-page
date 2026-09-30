@@ -246,14 +246,21 @@ function pending() {
   for (const t of dirty.values()) n += t.size;
   return n + reordered.size;
 }
+/* The bar carries undo, redo and cancel, not only Save, so it is there from
+   the moment you sign in. Hiding it until the first edit meant looking for
+   undo and finding nothing — the controls have to be visible before they are
+   needed, or nobody knows they exist. */
 function showSaveBar() {
   const n = pending();
   const bar = $("#saveBar");
   if (!bar) return;
-  bar.classList.toggle("on", n > 0 || history.length > 0);
-  $("#saveMsg").textContent = n === 0
-    ? (history.length ? "Saved" : "")
-    : `${n} unsaved change${n === 1 ? "" : "s"}`;
+  bar.classList.add("on");
+  $("#saveMsg").textContent =
+    n > 0 ? `${n} unsaved change${n === 1 ? "" : "s"}`
+          : (history.length ? "All changes saved" : "No changes yet");
+  const save = $("#save"), sp = $("#savePreview");
+  if (save) save.disabled = n === 0;
+  if (sp) sp.textContent = n > 0 ? "Save & preview" : "Preview";
 }
 function clearDirty() { dirty.clear(); created.length = 0; deleted.length = 0; reordered = new Set(); showSaveBar(); }
 
@@ -1228,7 +1235,7 @@ async function start() {
     /* the window is opened before the await: a pop-up blocker only trusts one
        that was opened while the click was still being handled */
     const w = window.open("", "_blank", "noopener");
-    const ok = await saveAll();
+    const ok = await saveAll();          /* a no-op, and true, when nothing is dirty */
     const url = siteRoot() + "?preview=1&v=" + Date.now();
     if (w) { w.location = url; } else if (ok) { window.open(url, "_blank", "noopener"); }
   });
@@ -1262,6 +1269,7 @@ async function start() {
     tabs.append(b);
   }
 
+  paintHistory();
   try {
     await loadAll();
   } catch (e) {

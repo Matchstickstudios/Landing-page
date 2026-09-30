@@ -227,6 +227,22 @@ ${gaTag()}
 `);
 }
 
+/* ---------- cache-bust the admin ----------
+   GitHub Pages serves these with max-age=600, and a browser that has held on
+   to an older studio.js shows an admin that is missing whatever was just
+   added — which reads as "the deploy did not work". The stamp changes with
+   every build, so a new version is a new URL. */
+{
+  const stamp = Date.now().toString(36);
+  const f = path.join(ROOT, "admin/index.html");
+  if (fs.existsSync(f)) {
+    let a = fs.readFileSync(f, "utf8");
+    a = a.replace(/(href|src)="(studio\.(?:css|js))(\?v=[^"]*)?"/g, `$1="$2?v=${stamp}"`);
+    fs.writeFileSync(f, a);
+    console.log("  admin assets stamped " + stamp);
+  }
+}
+
 /* ---------- the landing page's <head>, from the database ----------
    index.html is hand-written and stays that way; only the marked block is
    replaced, so everything else in the head survives untouched. */
