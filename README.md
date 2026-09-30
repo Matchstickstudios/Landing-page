@@ -63,5 +63,19 @@ the sync is a no-op and the committed content is published as-is.
 ## The offline copy
 
 `index.html` fetches its content, so it needs a server — opening it from disk
-shows a message saying so. The fully self-contained single-file version lives
-outside this repo as `Matchstick-STRIKE-offline.html`.
+shows a message saying so.
+
+```
+node tools/make-offline.mjs
+```
+
+writes `../Matchstick-Studios-offline.html`: one file, ~1 MB, with the
+stylesheet, the fonts, the content and the icon folded back in. It opens from
+the Finder with no server and no network, and makes no external request at
+all — the Google tag is stripped, because a file being opened on someone's
+laptop is not website traffic and should not be logged as it.
+
+WhatsApp, call and email still work, because they are links. The enquiry
+table and the view counter do not, because they need Supabase.
+
+Rebuild it after changing content; it is a snapshot, not a mirror.
