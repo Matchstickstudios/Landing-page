@@ -1,4 +1,5 @@
 .DS_Store
+.og-profile/
 404.html
 blog/
 node_modules/
