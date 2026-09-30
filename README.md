@@ -11,7 +11,9 @@ The studio site. One landing page, a blog, and an admin panel to edit both.
 | `assets/blog.css` | the extra typography a page of prose needs |
 | `content/*.json` | all site copy: nav, team, services, projects, reasons, brief, theme |
 | `content/blog/*.md` | blog posts, one file each |
-| `tina/config.ts` | the admin panel's fields |
+| `admin/` | the studio: the admin panel, a static page |
+| `sync.mjs` | pulls content out of Supabase into the files above |
+| `supabase/` | schema.sql and seed.sql for the database |
 | `build.mjs` | turns the markdown into `/blog/` pages, plus sitemap and robots.txt |
 | `404.html` | not-found page |
 
@@ -20,28 +22,35 @@ the deploy builds them.
 
 ## Editing content
 
+Content lives in Supabase. Edit it at **/admin/** on the live site, or locally:
+
 ```
-npm run dev
+npm run dev            # serves the repo on :3000
 ```
 
-Admin at <http://localhost:3000/admin/index.html>, site at
-<http://localhost:3000/>. Saving writes to the files in `content/`; commit and
-push and the change is live.
+then <http://localhost:3000/admin/>. Sign in with the Supabase Auth user.
+
+Saving writes to Supabase, not to this repo. The site picks it up on the next
+sync — daily, or immediately by running the **Sync content from Supabase**
+workflow from the Actions tab.
+
+The browser never reads content from Supabase directly. A free project is
+paused after a week without traffic, and a paused project would otherwise take
+the site's content down with it; going through files means the deployed site
+keeps serving the last good pull whatever the database is doing.
 
 ## Building
 
 ```
-npm run build:blog     # the blog pages, sitemap, robots.txt
-npm run build          # the above plus the Tina admin (needs TinaCloud env vars)
+npm run sync           # Supabase -> content/ (needs SUPABASE_URL, SUPABASE_ANON_KEY)
+npm run build          # content/ -> blog pages, 404, sitemap, robots.txt
 ```
 
 ## Deploying
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds and
-publishes to GitHub Pages. For the live admin at `/admin/`, set repository
-secrets `TINA_CLIENT_ID`, `TINA_TOKEN` and `TINA_SEARCH_TOKEN` from a
-TinaCloud project. Without them the site still deploys; only `/admin/` is
-skipped.
+Pushing to `main` runs `.github/workflows/deploy.yml`: sync, build, publish to
+GitHub Pages. Set repository secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+Without them the sync is a no-op and the committed content is published as-is.
 
 ## The offline copy
 

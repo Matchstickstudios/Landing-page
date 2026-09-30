@@ -1,8 +1,7 @@
 .DS_Store
 404.html
-admin/
 blog/
 node_modules/
 robots.txt
 sitemap.xml
-tina/__generated__/
+tina/

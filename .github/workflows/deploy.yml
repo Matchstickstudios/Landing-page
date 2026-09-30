@@ -1,12 +1,10 @@
 # Builds the site and publishes it to GitHub Pages on every push to main.
 #
-# Two things get built:
-#   1. the blog pages, the sitemap and robots.txt, from content/blog/*.md
-#   2. the Tina admin, so /admin/ works on the live site
-#
-# The admin build needs a TinaCloud project. Without those secrets the step is
-# skipped and everything else still publishes, so the site is never held
-# hostage to the CMS being set up.
+# Content is pulled from Supabase first, then the blog pages, the sitemap and
+# robots.txt are generated from it. The admin at /admin/ is a static page and
+# needs no build. If the Supabase secrets are absent the sync is a no-op and
+# the committed content is published as-is, so the site is never held hostage
+# to the database being reachable.
 
 name: Deploy to GitHub Pages
 
@@ -27,11 +25,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      # lifted to the job so the "skip if unset" check below can read them
-      TINA_CLIENT_ID: ${{ secrets.TINA_CLIENT_ID }}
-      TINA_TOKEN: ${{ secrets.TINA_TOKEN }}
-      TINA_SEARCH_TOKEN: ${{ secrets.TINA_SEARCH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,12 +50,9 @@ jobs:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
         run: node build.mjs
 
-      - name: Build the Tina admin
-        if: env.TINA_CLIENT_ID != ''
-        run: npx tinacms build
 
       - name: Drop what the site does not need
-        run: rm -rf node_modules .github tina/__generated__
+        run: rm -rf node_modules .github
 
       - uses: actions/upload-pages-artifact@v3
         with:
