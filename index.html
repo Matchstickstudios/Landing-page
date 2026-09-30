@@ -134,6 +134,12 @@ function loadContent(){
         root.style.setProperty("--"+k,theme.colors[k]);});
     }
     if(theme&&theme.contact)CONTACT=theme.contact;
+  }).then(function(){
+    /* optional: absent on a site that is not wired to Supabase yet */
+    return fetch("content/supabase.json",{cache:"no-cache"})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(c){ if(c&&c.url&&c.anonKey)SUPA={url:c.url,key:c.anonKey}; })
+      .catch(function(){});
   });
 }
 /* a nav entry is a section id by default, but "/blog/" or a full URL is
@@ -784,8 +790,34 @@ function digitsOnly(el){
    browser's localStorage, which means they sit on the visitor's own device and
    you cannot see them — useful for testing, useless for collecting leads.
    Until an endpoint is set the two send buttons are what actually deliver.
+
+   With Supabase configured below, enquiries go into the `enquiries` table
+   instead. The anon key is meant to be public: the row-level policy on that
+   table allows an insert from anyone and a read from nobody, so a visitor can
+   leave their details and cannot look at anyone else's.
    --------------------------------------------------------------------------- */
 var FORM_ENDPOINT="";
+
+/* filled by content/supabase.json when the project is connected */
+var SUPA={url:"",key:""};
+function supaReady(){ return !!(SUPA.url && SUPA.key); }
+
+/* one insert, best effort. A failure here must never stop the visitor: the
+   WhatsApp and email buttons are still what actually delivers the enquiry. */
+function supaEnquiry(rec,via){
+  if(!supaReady())return Promise.resolve(false);
+  return fetch(SUPA.url.replace(/\/$/,"")+"/rest/v1/enquiries",{
+    method:"POST",
+    headers:{"Content-Type":"application/json",
+             apikey:SUPA.key, Authorization:"Bearer "+SUPA.key,
+             Prefer:"return=minimal"},
+    body:JSON.stringify({
+      name:rec.name, phone:rec.phone, email:rec.email,
+      services:rec.services, who:rec.who, start_when:rec.when,
+      message:rec.business, sent_via:via||null,
+      user_agent:navigator.userAgent.slice(0,300)})
+  }).then(function(r){return r.ok;}).catch(function(){return false;});
+}
 
 function briefRecord(){
   var v=function(id){var e=document.getElementById(id);return e?e.value.trim():"";};
@@ -798,7 +830,10 @@ function saveBrief(quiet){
   if(!briefValid())return;
   var rec=briefRecord();
   function done(msg){ if(!quiet) say(msg); }
-  if(FORM_ENDPOINT){
+  if(supaReady()){
+    supaEnquiry(rec,window._briefVia||null).then(function(ok){
+      done(ok?"Sent. We have your details.":"Could not send just now");});
+  }else if(FORM_ENDPOINT){
     fetch(FORM_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify(rec)})
       .then(function(r){ done(r.ok?"Sent. We have your details.":"Could not send just now"); })
@@ -848,9 +883,11 @@ function briefValid(){
 }
 function sendWA(){
   if(!briefValid())return;
+  window._briefVia="whatsapp";
   saveBrief(true);                    /* the record is kept without a second step */
   var t="New enquiry for Matchstick Studios\n\n"+briefLines();
-  window.open("https://wa.me/917904888874?text="+encodeURIComponent(t),"_blank","noopener");
+  var n=(CONTACT&&CONTACT.whatsapp)||"917904888874";
+  window.open("https://wa.me/"+n+"?text="+encodeURIComponent(t),"_blank","noopener");
   say("Opening WhatsApp with your enquiry");
 }
 function pick(k,btn){
@@ -866,9 +903,11 @@ function pick(k,btn){
 function sendBrief(ev){
   ev.preventDefault();
   if(!briefValid())return false;
+  window._briefVia="email";
   saveBrief(true);                    /* the record is kept without a second step */
   var sub="New enquiry"+(brief.need&&brief.need.length?": "+brief.need.join(", "):"");
-  location.href="mailto:matchstickstudios@gmail.com?subject="+encodeURIComponent(sub)
+  var to=(CONTACT&&CONTACT.email)||"matchstickstudios@gmail.com";
+  location.href="mailto:"+to+"?subject="+encodeURIComponent(sub)
     +"&body="+encodeURIComponent(briefLines());
   var b=ev.target.querySelector?ev.target.querySelector("button"):null;
   if(b){var r=b.getBoundingClientRect();sparkBurst(r.left+r.width/2,r.top+8,54,1.3);}

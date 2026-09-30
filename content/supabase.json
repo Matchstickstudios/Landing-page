@@ -1,0 +1,5 @@
+{
+  "_comment": "Settings -> API in the Supabase dashboard. The anon key is public by design and safe to commit: row-level security is what protects the data. The service_role key must NEVER appear here.",
+  "url": "",
+  "anonKey": ""
+}

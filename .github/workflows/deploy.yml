@@ -46,6 +46,12 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Pull content from Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node sync.mjs
+
       - name: Build the blog, sitemap and robots.txt
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
