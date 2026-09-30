@@ -58,20 +58,20 @@
   "story": "One room, five people, and work that never leaves the building. Property is where we are sharpest, but the job is the same for a showroom, a clinic or a restaurant: make it impossible to walk past.",
   "stats": [
     {
-      "value": "24",
-      "label": "Projects delivered"
+      "label": "Projects delivered",
+      "value": "24"
     },
     {
-      "value": "06",
-      "label": "Services"
+      "label": "Services",
+      "value": "06"
     },
     {
-      "value": "12",
-      "label": "Brands launched"
+      "label": "Brands launched",
+      "value": "12"
     },
     {
-      "value": "40",
-      "label": "Campaigns run"
+      "label": "Campaigns run",
+      "value": "40"
     }
   ],
   "url": "https://matchstickstudios.github.io/Landing-page"

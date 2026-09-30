@@ -1,11 +1,10 @@
 ---
-title: Why a hoarding still beats a boosted post
+title: "Why a hoarding still beats a boosted post"
 date: 2026-09-12T00:00:00.000Z
-excerpt: A forty-foot board has one job and it does it for six months. Here is
-  where it still outruns the feed, and where it does not.
+excerpt: "A forty-foot board has one job and it does it for six months. Here is where it still outruns the feed, and where it does not."
 tags:
-  - Creatives
-  - Property
+  - "Creatives"
+  - "Property"
 draft: false
 ---
 

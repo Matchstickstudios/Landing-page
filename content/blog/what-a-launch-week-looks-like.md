@@ -1,11 +1,10 @@
 ---
-title: What a launch week actually looks like
+title: "What a launch week actually looks like"
 date: 2026-08-28T00:00:00.000Z
-excerpt: Seven days, from the name being signed off to the first enquiry
-  landing in someone's hand. No theory, just the order things happen in.
+excerpt: "Seven days, from the name being signed off to the first enquiry landing in someone's hand. No theory, just the order things happen in."
 tags:
-  - Launch
-  - Process
+  - "Launch"
+  - "Process"
 draft: false
 ---
 

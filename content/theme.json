@@ -1,16 +1,16 @@
 {
   "colors": {
-    "soot": "#07070A",
-    "soot2": "#0D0E12",
-    "panel": "#12131A",
     "ash": "#F0EAE0",
     "ash2": "#9B958C",
     "ash3": "#837F79",
+    "cool": "#4C7FA8",
+    "deep": "#C0261A",
+    "gold": "#FFD98A",
+    "soot": "#07070A",
     "ember": "#FF5F1F",
     "flame": "#FFB13D",
-    "gold": "#FFD98A",
-    "deep": "#C0261A",
-    "cool": "#4C7FA8"
+    "panel": "#12131A",
+    "soot2": "#0D0E12"
   },
   "contact": {
     "phone": "+917904888874",
