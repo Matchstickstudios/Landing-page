@@ -70,6 +70,7 @@ ${img ? `<meta property="og:image" content="${esc(img)}">` : ""}
 <meta name="twitter:description" content="${esc(description)}">
 ${img ? `<meta name="twitter:image" content="${esc(img)}">` : ""}
 <meta name="theme-color" content="${esc(THEME.colors?.soot || "#07070A")}">
+<link rel="icon" type="image/png" sizes="64x64" href="${up}assets/favicon.png">
 <link rel="stylesheet" href="${up}assets/site.css">
 <link rel="stylesheet" href="${up}assets/blog.css">
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>` : ""}
@@ -172,6 +173,7 @@ for (const p of posts) {
 <title>Not here — ${esc(NAME)}</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="${esc(THEME.colors?.soot || "#07070A")}">
+<link rel="icon" type="image/png" sizes="64x64" href="${base}/assets/favicon.png">
 <link rel="stylesheet" href="${base}/assets/site.css">
 <link rel="stylesheet" href="${base}/assets/blog.css">
 </head>
