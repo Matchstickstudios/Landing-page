@@ -228,6 +228,12 @@ ${gaTag()}
   let html = fs.readFileSync(f, "utf8");
   const A = "<!--seo:start-->", B = "<!--seo:end-->";
   const i = html.indexOf(A), j = html.indexOf(B);
+  /* The block between the markers is replaced wholesale, so anything the page
+     needs that is not SEO must live outside it. The stylesheet link once sat
+     inside this range and was silently deleted on every build, which took the
+     whole site's CSS with it. */
+  if (i !== -1 && j !== -1 && html.slice(i, j).includes("stylesheet"))
+    throw new Error("build: a stylesheet link is inside the seo markers - move it out before building");
   if (i === -1 || j === -1) {
     console.log("  (index.html has no seo markers \u2014 left alone)");
   } else {
