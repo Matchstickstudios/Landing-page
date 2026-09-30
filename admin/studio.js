@@ -35,7 +35,10 @@ async function loadConfig() {
   const c = await r.json();
   if (!c.url || !c.anonKey)
     throw new Error("content/supabase.json has no url or anonKey yet. Fill it in and reload.");
-  return { url: c.url.replace(/\/$/, ""), key: c.anonKey };
+  /* Supabase names a new edge function for you unless you rename it, so the
+     name is configuration rather than something this file gets to assume. */
+  return { url: c.url.replace(/\/$/, ""), key: c.anonKey,
+           fn: c.publishFunction || "publish" };
 }
 
 /* ---------------- api ---------------- */
@@ -938,7 +941,7 @@ function siteRoot() {
 }
 
 async function startPublish() {
-  const r = await fetch(`${CFG.url}/functions/v1/publish`, {
+  const r = await fetch(`${CFG.url}/functions/v1/${CFG.fn}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: CFG.key,
                Authorization: `Bearer ${TOKEN}` },
@@ -1025,7 +1028,7 @@ function publishFlow() {
       body.innerHTML = "";
       if (e.message === "NOFUNC") {
         body.append(
-          el("p", {}, "The publish function has not been deployed to Supabase yet, so this button cannot start the rebuild."),
+          el("p", {}, `No edge function called "${CFG.fn}" answered, so this button cannot start the rebuild. Check the name in content/supabase.json matches the one in Supabase.`),
           el("p", {}, "Until it is, your changes still go live on the daily rebuild, or you can start one on GitHub."));
       } else {
         body.append(el("p", {}, e.message));

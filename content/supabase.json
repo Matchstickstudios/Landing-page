@@ -1,5 +1,6 @@
 {
-  "_comment": "Settings -> API Keys in the Supabase dashboard. The publishable/anon key is public by design and safe to commit: row-level security is what protects the data. The secret / service_role key must NEVER appear here.",
+  "_comment": "Settings -> API Keys in the Supabase dashboard. The publishable/anon key is public by design and safe to commit: row-level security is what protects the data. The secret / service_role key must NEVER appear here. publishFunction is the name of the edge function that starts a deploy; Supabase names a new function for you unless you rename it.",
   "url": "https://qystgshskcixnipmsiqh.supabase.co",
-  "anonKey": "sb_publishable_r9FQY0pSbqnEgiQLxQCqQg_KRn24Z0O"
+  "anonKey": "sb_publishable_r9FQY0pSbqnEgiQLxQCqQg_KRn24Z0O",
+  "publishFunction": "super-function"
 }
