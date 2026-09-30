@@ -101,6 +101,27 @@ changed += write("content/theme.json", {
   contact: { phone: s.phone || "", whatsapp: s.whatsapp || "", email: s.email || "" },
 });
 
+/* ---------- seo ----------
+   Added by a later migration, so its absence is not an error: a project that
+   has not run 002_seo_analytics.sql keeps whatever is committed. */
+try {
+  const seo = await table("seo", "select=*&limit=1");
+  if (seo[0]) {
+    const o = seo[0];
+    changed += write("content/seo.json", {
+      title: o.title || "", description: o.description || "",
+      keywords: o.keywords || [], og_image: o.og_image || "",
+      twitter_handle: o.twitter_handle || "",
+      ga_measurement_id: o.ga_measurement_id || "",
+      gsc_verification: o.gsc_verification || "",
+      bing_verification: o.bing_verification || "",
+      robots: o.robots || "index,follow",
+    });
+  }
+} catch {
+  console.log("  (no seo table yet \u2014 skipping)");
+}
+
 /* ---------- blog ---------- */
 const blogDir = path.join(ROOT, "content/blog");
 fs.mkdirSync(blogDir, { recursive: true });

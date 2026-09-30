@@ -101,6 +101,54 @@ async function restoreSession() {
     return true;
   } catch { localStorage.removeItem(SESSION_KEY); return false; }
 }
+async function sendReset(email) {
+  const r = await fetch(`${CFG.url}/auth/v1/recover`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: CFG.key },
+    body: JSON.stringify({ email, redirect_to: location.origin + location.pathname }),
+  });
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}));
+    throw new Error(d.msg || d.error_description || d.message || "Could not send the link");
+  }
+  /* GoTrue answers 200 whether or not the address exists, on purpose: it must
+     not become a way of asking which emails have accounts. */
+}
+
+async function setPassword(password) {
+  const r = await fetch(`${CFG.url}/auth/v1/user`, {
+    method: "PUT", headers: headers(), body: JSON.stringify({ password }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.msg || d.error_description || d.message || "Could not set the password");
+  return d;
+}
+
+/* The emailed link comes back as #access_token=...&type=recovery. Consuming it
+   signs the browser in, which is what lets the password be changed. */
+function recoveryFromHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get("type") !== "recovery" || !h.get("access_token")) return null;
+  const tok = {
+    access_token: h.get("access_token"),
+    refresh_token: h.get("refresh_token"),
+    expires_in: +(h.get("expires_in") || 3600),
+    user: null,
+  };
+  history.replaceState(null, "", location.pathname);   /* keep it out of the bar */
+  return tok;
+}
+
+function eyeToggle(btn, input) {
+  btn.addEventListener("click", () => {
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    btn.classList.toggle("on", show);
+    btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    input.focus();
+  });
+}
+
 function signOut() {
   fetch(`${CFG.url}/auth/v1/logout`, { method: "POST", headers: headers() }).catch(() => {});
   localStorage.removeItem(SESSION_KEY);
@@ -479,6 +527,160 @@ const VIEWS = {
     },
   },
 
+  seo: {
+    label: "SEO",
+    async render(view) {
+      view.append(el("h1", {}, "SEO"),
+        el("p", { class: "sub" }, "What Google and the social networks read. These are written into every page at build time \u2014 the landing page, the blog index and each post."));
+      const rows = await getAll("seo", "select=*&limit=1").catch(() => []);
+      if (!rows.length) {
+        view.append(el("p", { class: "err" },
+          "The seo table does not exist yet. Run supabase/002_seo_analytics.sql in the SQL editor."));
+        return;
+      }
+      const o = rows[0];
+      const m = (f) => (v) => { o[f] = v; mark("seo", o.id, f, v); };
+      const c1 = el("div", { class: "card" });
+      c1.append(field("Page title", "What shows in the tab and as the headline in search results. Around 60 characters.",
+        text(o.title, m("title"))));
+      c1.append(field("Meta description", "The grey text under the title in search results. Around 155 characters.",
+        text(o.description, m("description"), { area: true })));
+      c1.append(field("Keywords", "Google ignores these, but Bing and some crawlers still read them.",
+        chips(o.keywords, m("keywords"))));
+      view.append(c1);
+
+      const c2 = el("div", { class: "card" });
+      c2.append(el("h3", { style: "margin:0 0 4px;font-size:15px" }, "Sharing"));
+      c2.append(field("Share image", "Absolute URL. Shown when the site is pasted into WhatsApp, LinkedIn or X. 1200\u00d7630 works everywhere.",
+        text(o.og_image, m("og_image"), { ph: "https://\u2026/share.png" })));
+      c2.append(field("X / Twitter handle", null, text(o.twitter_handle, m("twitter_handle"), { ph: "@matchstickstd" })));
+      view.append(c2);
+
+      const c3 = el("div", { class: "card" });
+      c3.append(el("h3", { style: "margin:0 0 4px;font-size:15px" }, "Google"));
+      c3.append(field("Google Analytics measurement ID",
+        "From Analytics \u2192 Admin \u2192 Data streams. Looks like G-XXXXXXXXXX. Leave blank to run no Google tag at all.",
+        text(o.ga_measurement_id, m("ga_measurement_id"), { ph: "G-XXXXXXXXXX" })));
+      c3.append(field("Search Console verification",
+        "Search Console \u2192 Add property \u2192 HTML tag. Paste only the content value, not the whole tag.",
+        text(o.gsc_verification, m("gsc_verification"))));
+      c3.append(field("Bing verification", "Optional.", text(o.bing_verification, m("bing_verification"))));
+      c3.append(field("Robots", "index,follow lets search engines in. noindex,nofollow keeps the whole site out of search.",
+        (() => {
+          const sel = el("select", { class: "inp" });
+          for (const v of ["index,follow", "noindex,follow", "index,nofollow", "noindex,nofollow"])
+            sel.append(el("option", { value: v, selected: o.robots === v || false }, v));
+          sel.value = o.robots || "index,follow";
+          sel.addEventListener("change", () => m("robots")(sel.value));
+          return sel;
+        })()));
+      view.append(c3);
+
+      view.append(el("div", { class: "note", html:
+        "Changes here reach Google only after the site rebuilds \u2014 daily, or immediately from the Actions tab. " +
+        "After that, ask Google to re-read it in <b>Search Console \u2192 URL inspection \u2192 Request indexing</b>." }));
+    },
+  },
+
+  analytics: {
+    label: "Analytics",
+    async render(view) {
+      view.append(el("h1", {}, "Analytics"),
+        el("p", { class: "sub" }, "Counted by the site itself, into your own database. No third party, no cookie banner, and nobody else holds the numbers."));
+
+      let days = 30;
+      const host = el("div", {});
+      const range = el("div", { class: "range" });
+      for (const d of [7, 30, 90]) {
+        range.append(el("button", {
+          class: "btn " + (d === days ? "" : "gho") + " sm",
+          onclick: () => { days = d; paint(); },
+        }, `${d} days`));
+      }
+      view.append(range, host);
+
+      async function paint() {
+        for (const b of range.children)
+          b.className = "btn " + (b.textContent === `${days} days` ? "" : "gho") + " sm";
+        host.textContent = "Loading\u2026";
+        const since = new Date(Date.now() - days * 864e5).toISOString();
+        let rows;
+        try {
+          rows = await getAll("pageviews", `select=*&created_at=gte.${since}&order=created_at.desc&limit=20000`);
+        } catch (e) {
+          host.textContent = "";
+          host.append(el("p", { class: "err" },
+            "The pageviews table does not exist yet. Run supabase/002_seo_analytics.sql in the SQL editor."));
+          return;
+        }
+        host.textContent = "";
+        if (!rows.length) {
+          host.append(el("p", { class: "empty" },
+            "No views recorded yet. The counter starts with the next deploy \u2014 give it a day."));
+          return;
+        }
+
+        const sessions = new Set(rows.map((r) => r.session)).size;
+        const byDay = new Map();
+        for (let i = days - 1; i >= 0; i--)
+          byDay.set(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10), 0);
+        for (const r of rows) {
+          const d = r.created_at.slice(0, 10);
+          if (byDay.has(d)) byDay.set(d, byDay.get(d) + 1);
+        }
+        const tally = (fn) => {
+          const m = new Map();
+          for (const r of rows) { const k = fn(r) || "\u2014"; m.set(k, (m.get(k) || 0) + 1); }
+          return [...m.entries()].sort((a, b) => b[1] - a[1]);
+        };
+
+        host.append(el("div", { class: "kpis" },
+          el("div", { class: "kpi" }, el("b", {}, String(rows.length)), el("span", {}, "Page views")),
+          el("div", { class: "kpi" }, el("b", {}, String(sessions)), el("span", {}, "Visits")),
+          el("div", { class: "kpi" }, el("b", {}, (rows.length / sessions).toFixed(1)), el("span", {}, "Pages per visit")),
+          el("div", { class: "kpi" }, el("b", {}, String(Math.round(rows.length / days))), el("span", {}, "Views a day"))));
+
+        const max = Math.max(...byDay.values(), 1);
+        const chart = el("div", { class: "chart" });
+        for (const [d, n] of byDay) {
+          chart.append(el("div", { class: "cbar", style: `height:${Math.max(2, (n / max) * 100)}%` },
+            el("span", {}, `${new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}: ${n}`)));
+        }
+        host.append(chart);
+
+        const table = (title, entries, label) => {
+          const t = el("table", {}, el("thead", {}, el("tr", {},
+            el("th", {}, label), el("th", { style: "width:90px" }, "Views"))));
+          const tb = el("tbody", {});
+          for (const [k, n] of entries.slice(0, 12)) tb.append(el("tr", {}, el("td", {}, k), el("td", {}, String(n))));
+          t.append(tb);
+          return el("div", { style: "margin-bottom:22px" },
+            el("h3", { style: "font-size:14px;margin:0 0 8px" }, title), t);
+        };
+        const pages = tally((r) => r.path);
+        const refs = tally((r) => {
+          if (!r.referrer) return "Direct / none";
+          try { return new URL(r.referrer).hostname.replace(/^www\./, ""); } catch { return r.referrer; }
+        });
+        const screens = tally((r) => r.screen);
+
+        host.append(el("div", { class: "exports" },
+          el("button", { class: "btn gho sm", onclick: () =>
+            downloadXls(pages.map(([path, views]) => ({ path, views })),
+              [{ key: "path", label: "Page" }, { key: "views", label: "Views" }], "Analytics") }, "Excel (.xls)"),
+          el("button", { class: "btn gho sm", onclick: () =>
+            downloadPdf(pages.map(([path, views]) => ({ path, views })),
+              [{ key: "path", label: "Page" }, { key: "views", label: "Views" }],
+              "Analytics", `${rows.length} views over ${days} days`) }, "PDF")));
+
+        host.append(table("Pages", pages, "Path"));
+        host.append(table("Where they came from", refs, "Source"));
+        host.append(table("Screen", screens, "Type"));
+      }
+      paint();
+    },
+  },
+
   enquiries: {
     label: "Enquiries",
     async render(view) {
@@ -489,10 +691,18 @@ const VIEWS = {
         view.append(el("p", { class: "empty" }, "Nothing yet."));
         return;
       }
-      view.append(el("button", {
-        class: "btn gho sm", style: "margin-bottom:14px",
-        onclick: () => downloadCsv(rows),
-      }, "Download CSV"));
+      const cols = [
+        { key: "created_at", label: "When", get: (r) => new Date(r.created_at).toLocaleString("en-GB") },
+        { key: "name", label: "Name" }, { key: "phone", label: "Phone" },
+        { key: "email", label: "Email" }, { key: "services", label: "Wants" },
+        { key: "who", label: "Who" }, { key: "start_when", label: "Start" },
+        { key: "message", label: "About the business" }, { key: "sent_via", label: "Via" },
+      ];
+      view.append(el("div", { class: "exports" },
+        el("button", { class: "btn gho sm", onclick: () => downloadXls(rows, cols, "Enquiries") }, "Excel (.xls)"),
+        el("button", { class: "btn gho sm", onclick: () =>
+          downloadPdf(rows, cols, "Enquiries", `${rows.length} enquiries \u00b7 exported ${new Date().toLocaleDateString("en-GB")}`) }, "PDF"),
+        el("button", { class: "btn gho sm", onclick: () => downloadCsv(rows) }, "CSV")));
       const t = el("table", {}, el("thead", {}, el("tr", {},
         ...["When", "Name", "Phone", "Email", "Wants", "Who", "Start", "Via"].map((h) => el("th", {}, h)))));
       const tb = el("tbody", {});
@@ -512,6 +722,61 @@ const VIEWS = {
     },
   },
 };
+
+/* Excel opens SpreadsheetML 2003 natively, so a real .xls needs no library and
+   no CDN — which matters in a browser with shields up. */
+function downloadXls(rows, cols, name) {
+  const x = (v) => String(Array.isArray(v) ? v.join("; ") : (v ?? ""))
+    .replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const head = cols.map((c) => `<Cell ss:StyleID="h"><Data ss:Type="String">${x(c.label)}</Data></Cell>`).join("");
+  const body = rows.map((r) =>
+    "<Row>" + cols.map((c) => `<Cell><Data ss:Type="String">${x(c.get ? c.get(r) : r[c.key])}</Data></Cell>`).join("") + "</Row>"
+  ).join("");
+  const xml = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles><Style ss:ID="h"><Font ss:Bold="1"/>
+<Interior ss:Color="#FF5F1F" ss:Pattern="Solid"/></Style></Styles>
+<Worksheet ss:Name="${x(name)}"><Table><Row>${head}</Row>${body}</Table></Worksheet>
+</Workbook>`;
+  saveBlob(new Blob([xml], { type: "application/vnd.ms-excel" }),
+    `${name.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.xls`);
+}
+
+/* PDF through the browser's own print pipeline: no library, and the result is
+   a proper vector PDF rather than a screenshot. */
+function downloadPdf(rows, cols, name, sub) {
+  const x = (v) => String(Array.isArray(v) ? v.join("; ") : (v ?? ""))
+    .replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const w = window.open("", "_blank", "width=1000,height=760");
+  if (!w) { toast("Allow pop-ups for this site to export a PDF", true); return; }
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${x(name)}</title>
+<style>
+  @page{size:A4 landscape;margin:14mm}
+  body{font:11px/1.45 -apple-system,system-ui,sans-serif;color:#111;margin:0}
+  h1{font-size:17px;margin:0 0 3px}
+  .sub{color:#666;font-size:11px;margin:0 0 14px}
+  table{width:100%;border-collapse:collapse}
+  th{background:#FF5F1F;color:#fff;text-align:left;padding:7px 8px;font-size:10px;
+     text-transform:uppercase;letter-spacing:.05em}
+  td{padding:6px 8px;border-bottom:1px solid #e3e3e3;vertical-align:top}
+  tr:nth-child(even) td{background:#fafafa}
+</style></head><body>
+<h1>${x(name)} &mdash; Matchstick Studios</h1>
+<p class="sub">${x(sub || "")}</p>
+<table><thead><tr>${cols.map((c) => `<th>${x(c.label)}</th>`).join("")}</tr></thead>
+<tbody>${rows.map((r) => "<tr>" + cols.map((c) => `<td>${x(c.get ? c.get(r) : r[c.key])}</td>`).join("") + "</tr>").join("")}</tbody>
+</table></body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 350);
+}
+
+function saveBlob(blob, filename) {
+  const a = el("a", { href: URL.createObjectURL(blob), download: filename });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
 
 function downloadCsv(rows) {
   const cols = ["created_at", "name", "phone", "email", "services", "who", "start_when", "message", "sent_via"];
@@ -569,6 +834,8 @@ async function loadAll() {
       getAll("posts", "select=*&order=published.desc"),
     ]);
   Object.assign(DATA, { nav, social, ticker, team, services, projects, reasons, brief_options, settings, posts });
+  /* added by a later migration: the panel still opens without it */
+  DATA.seo = await getAll("seo", "select=*&limit=1").catch(() => []);
 }
 
 async function show(tab) {
@@ -595,8 +862,32 @@ async function start() {
     $("#bootErr").textContent = e.message;
     return;
   }
-  const signedIn = await restoreSession();
+  /* the emailed reset link lands here first */
+  const recovery = recoveryFromHash();
+  if (recovery) keepSession(recovery);
+
+  const signedIn = recovery ? true : await restoreSession();
   $("#boot").hidden = true;
+
+  eyeToggle($("#pwEye"), $("#pw"));
+  eyeToggle($("#npEye"), $("#np"));
+
+  if (recovery) {
+    /* signed in by the link, but the only thing to do is choose a password */
+    $("#login").hidden = false;
+    $("#loginForm").hidden = true;
+    $("#newPwForm").hidden = false;
+    $("#newPwForm").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      $("#newPwErr").textContent = "";
+      try {
+        await setPassword($("#np").value);
+        toast("Password set. Signing you in\u2026");
+        setTimeout(() => location.replace(location.pathname), 900);
+      } catch (e) { $("#newPwErr").textContent = e.message; }
+    });
+    return;
+  }
 
   if (!signedIn) {
     $("#login").hidden = false;
@@ -607,6 +898,31 @@ async function start() {
         await signIn($("#em").value.trim(), $("#pw").value);
         location.reload();
       } catch (e) { $("#loginErr").textContent = e.message; }
+    });
+    $("#forgot").addEventListener("click", () => {
+      $("#loginForm").hidden = true;
+      $("#resetForm").hidden = false;
+      $("#rEm").value = $("#em").value;
+      $("#rEm").focus();
+    });
+    $("#backToLogin").addEventListener("click", () => {
+      $("#resetForm").hidden = true;
+      $("#loginForm").hidden = false;
+    });
+    $("#resetForm").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      $("#resetErr").textContent = "";
+      const btn = $("#resetForm button[type=submit]");
+      btn.disabled = true;
+      try {
+        await sendReset($("#rEm").value.trim());
+        $("#resetForm").innerHTML =
+          '<p class="sub">If that address has an account, a reset link is on its way. ' +
+          'It is good for one hour. Check spam if it is not there in a minute.</p>';
+      } catch (e) {
+        $("#resetErr").textContent = e.message;
+        btn.disabled = false;
+      }
     });
     return;
   }

@@ -19,6 +19,30 @@ const SITE = JSON.parse(fs.readFileSync(path.join(ROOT, "content/site.json"), "u
 const THEME = JSON.parse(fs.readFileSync(path.join(ROOT, "content/theme.json"), "utf8"));
 
 const BASE = (process.env.SITE_URL || SITE.url || "").replace(/\/$/, "");
+
+/* SEO is edited in the admin and synced down; these are the fallbacks for a
+   repo that has not run the migration yet. */
+const SEO = (() => {
+  const f = path.join(ROOT, "content/seo.json");
+  const d = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {};
+  return {
+    title: d.title || "Matchstick Studios \u2014 Branding, Creatives, Social & Ads",
+    description: d.description || "",
+    keywords: d.keywords || [],
+    ogImage: d.og_image || "",
+    twitter: d.twitter_handle || "",
+    ga: d.ga_measurement_id || "",
+    gsc: d.gsc_verification || "",
+    bing: d.bing_verification || "",
+    robots: d.robots || "index,follow",
+  };
+})();
+
+/* the Google tag, only when an ID has actually been set */
+const gaTag = () => SEO.ga ? `
+<script async src="https://www.googletagmanager.com/gtag/js?id=${SEO.ga}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}
+gtag('js',new Date());gtag('config','${SEO.ga}');</script>` : "";
 const NAME = "Matchstick Studios";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -50,7 +74,8 @@ const posts = (fs.existsSync(dir) ? fs.readdirSync(dir) : [])
 /* ---------- the page shell ---------- */
 function shell({ title, description, canonical, image, depth, body, jsonld }) {
   const up = "../".repeat(depth) || "./";
-  const img = image ? (image.startsWith("http") ? image : BASE + image) : "";
+  const chosen = image || SEO.ogImage;
+  const img = chosen ? (chosen.startsWith("http") ? chosen : BASE + chosen) : "";
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -70,6 +95,11 @@ ${img ? `<meta property="og:image" content="${esc(img)}">` : ""}
 <meta name="twitter:description" content="${esc(description)}">
 ${img ? `<meta name="twitter:image" content="${esc(img)}">` : ""}
 <meta name="theme-color" content="${esc(THEME.colors?.soot || "#07070A")}">
+<meta name="robots" content="${esc(SEO.robots)}">
+${SEO.twitter ? `<meta name="twitter:site" content="${esc(SEO.twitter)}">` : ""}
+${SEO.gsc ? `<meta name="google-site-verification" content="${esc(SEO.gsc)}">` : ""}
+${SEO.bing ? `<meta name="msvalidate.01" content="${esc(SEO.bing)}">` : ""}
+${gaTag()}
 <link rel="icon" type="image/png" sizes="64x64" href="${up}assets/favicon.png">
 <link rel="stylesheet" href="${up}assets/site.css">
 <link rel="stylesheet" href="${up}assets/blog.css">
@@ -187,6 +217,59 @@ for (const p of posts) {
 </body>
 </html>
 `);
+}
+
+/* ---------- the landing page's <head>, from the database ----------
+   index.html is hand-written and stays that way; only the marked block is
+   replaced, so everything else in the head survives untouched. */
+{
+  const f = path.join(ROOT, "index.html");
+  let html = fs.readFileSync(f, "utf8");
+  const A = "<!--seo:start-->", B = "<!--seo:end-->";
+  const i = html.indexOf(A), j = html.indexOf(B);
+  if (i === -1 || j === -1) {
+    console.log("  (index.html has no seo markers \u2014 left alone)");
+  } else {
+    const url = BASE ? BASE + "/" : "";
+    const img = SEO.ogImage ? (SEO.ogImage.startsWith("http") ? SEO.ogImage : BASE + SEO.ogImage) : "";
+    const block = [
+      `<title>${esc(SEO.title)}</title>`,
+      `<meta name="description" content="${esc(SEO.description)}">`,
+      SEO.keywords.length ? `<meta name="keywords" content="${esc(SEO.keywords.join(", "))}">` : "",
+      `<meta name="robots" content="${esc(SEO.robots)}">`,
+      SEO.gsc ? `<meta name="google-site-verification" content="${esc(SEO.gsc)}">` : "",
+      SEO.bing ? `<meta name="msvalidate.01" content="${esc(SEO.bing)}">` : "",
+      url ? `<link rel="canonical" href="${esc(url)}">` : "",
+      `<meta property="og:type" content="website">`,
+      `<meta property="og:site_name" content="${esc(NAME)}">`,
+      `<meta property="og:title" content="${esc(SEO.title)}">`,
+      `<meta property="og:description" content="${esc(SEO.description)}">`,
+      url ? `<meta property="og:url" content="${esc(url)}">` : "",
+      img ? `<meta property="og:image" content="${esc(img)}">` : "",
+      `<meta property="og:locale" content="en_IN">`,
+      `<meta name="twitter:card" content="${img ? "summary_large_image" : "summary"}">`,
+      SEO.twitter ? `<meta name="twitter:site" content="${esc(SEO.twitter)}">` : "",
+      `<meta name="twitter:title" content="${esc(SEO.title)}">`,
+      `<meta name="twitter:description" content="${esc(SEO.description)}">`,
+      img ? `<meta name="twitter:image" content="${esc(img)}">` : "",
+      `<script type="application/ld+json">${JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        name: NAME,
+        description: SEO.description,
+        ...(url ? { url } : {}),
+        ...(img ? { image: img } : {}),
+        telephone: THEME.contact?.phone || "",
+        email: THEME.contact?.email || "",
+        areaServed: "IN",
+        sameAs: (SITE.social || []).map((x) => x.url),
+      })}</script>`,
+      gaTag().trim(),
+    ].filter(Boolean).join("\n");
+    html = html.slice(0, i + A.length) + "\n" + block + "\n" + html.slice(j);
+    fs.writeFileSync(f, html);
+    console.log("  index.html <head> rebuilt from content/seo.json");
+  }
 }
 
 /* ---------- sitemap + robots ---------- */

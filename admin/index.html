@@ -22,10 +22,44 @@
     </div>
     <div class="f">
       <label for="pw">Password</label>
-      <input class="inp" id="pw" type="password" autocomplete="current-password" required>
+      <div class="pwWrap">
+        <input class="inp" id="pw" type="password" autocomplete="current-password" required>
+        <button class="pwEye" id="pwEye" type="button" aria-label="Show password" title="Show password"></button>
+      </div>
     </div>
     <div class="f"><button class="btn" style="width:100%;justify-content:center" type="submit">Sign in</button></div>
     <p class="err" id="loginErr"></p>
+    <p style="text-align:center;margin-top:14px">
+      <button class="linky" id="forgot" type="button">Forgot your password?</button>
+    </p>
+  </form>
+
+  <!-- asking for a reset link -->
+  <form id="resetForm" hidden>
+    <div class="f">
+      <label for="rEm">Email</label>
+      <input class="inp" id="rEm" type="email" autocomplete="username" required>
+      <span class="hint">We will send a link that signs you in and lets you set a new password.</span>
+    </div>
+    <div class="f"><button class="btn" style="width:100%;justify-content:center" type="submit">Send reset link</button></div>
+    <p class="err" id="resetErr"></p>
+    <p style="text-align:center;margin-top:14px">
+      <button class="linky" id="backToLogin" type="button">Back to sign in</button>
+    </p>
+  </form>
+
+  <!-- arrived from the emailed link -->
+  <form id="newPwForm" hidden>
+    <div class="f">
+      <label for="np">New password</label>
+      <div class="pwWrap">
+        <input class="inp" id="np" type="password" autocomplete="new-password" minlength="8" required>
+        <button class="pwEye" id="npEye" type="button" aria-label="Show password"></button>
+      </div>
+      <span class="hint">At least 8 characters.</span>
+    </div>
+    <div class="f"><button class="btn" style="width:100%;justify-content:center" type="submit">Set password</button></div>
+    <p class="err" id="newPwErr"></p>
   </form>
 </div>
 
