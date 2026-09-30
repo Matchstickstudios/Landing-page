@@ -1,0 +1,70 @@
+{
+  "services": [
+    {
+      "title": "Branding",
+      "kicker": "Identity",
+      "summary": "The name, the mark, and the rules that keep every project looking like you.",
+      "get": [
+        "A logo and mark in every file you will be asked for",
+        "Colour, type and a one-page rule sheet anyone can follow",
+        "An identity kit so each new project still looks like yours"
+      ],
+      "first30": "Positioning in week one, a first identity route inside three."
+    },
+    {
+      "title": "Creatives &amp; Promotions",
+      "kicker": "Campaign",
+      "summary": "Launch artwork that holds up on a phone screen and on a hoarding.",
+      "get": [
+        "One key visual the whole campaign hangs off",
+        "Creatives cut to every placement you actually buy",
+        "Brochures, standees and hoardings from the same set"
+      ],
+      "first30": "Key visual signed off, the first full set live inside the month."
+    },
+    {
+      "title": "Social Media",
+      "kicker": "Always on",
+      "summary": "A month you can see in advance, posted and replied to by us.",
+      "get": [
+        "A monthly calendar approved before anything goes out",
+        "Reels, stories and posts designed, written and scheduled",
+        "Comments and DMs answered, real enquiries passed same day"
+      ],
+      "first30": "A calendar a month ahead, the first shoot at site by week three."
+    },
+    {
+      "title": "Meta &amp; Google Ads",
+      "kicker": "Paid media",
+      "summary": "Budget pointed at enquiries, not at likes.",
+      "get": [
+        "Meta and Google set up properly, tracking in place first",
+        "Creative tested against creative instead of guessed at",
+        "Weekly numbers in plain language, good week or bad"
+      ],
+      "first30": "Tracking fixed first, then a real cost per enquiry by day thirty."
+    },
+    {
+      "title": "Lead Generation",
+      "kicker": "Enquiries",
+      "summary": "The enquiry reaches a human while they are still interested.",
+      "get": [
+        "A landing page per project, built to be filled in on a phone",
+        "Routing so the right person sees it first, not a shared inbox",
+        "A follow-up flow your sales team can actually work"
+      ],
+      "first30": "Page live, form tested end to end, leads on a phone in two weeks."
+    },
+    {
+      "title": "Websites",
+      "kicker": "Build",
+      "summary": "Fast, clear, and something you can update without calling us.",
+      "get": [
+        "A company site with a project section you control",
+        "A microsite per project when a launch deserves its own",
+        "Built to open quickly on a phone, on mobile data"
+      ],
+      "first30": "Sitemap and design agreed in week one, the build yours by week four."
+    }
+  ]
+}

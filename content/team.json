@@ -1,0 +1,91 @@
+{
+  "members": [
+    {
+      "name": "Rohith",
+      "role": "Founder & Client Partner",
+      "initials": "RO",
+      "bio": "The first call, and every one after it. Rohith decides what we take on, agrees what it is worth, and stays on your file long after the handshake.",
+      "does": [
+        "Clients",
+        "Strategy",
+        "Pitching",
+        "Decisions"
+      ],
+      "pos": {
+        "x": 1,
+        "y": 0,
+        "r": -3
+      }
+    },
+    {
+      "name": "Harikrishnam Raju",
+      "role": "Co-founder · UI/UX & Strategy Lead",
+      "initials": "HR",
+      "bio": "Co-founder, and the person who turns a loose brief into something you can actually see. Senior UI/UX design, the strategy sitting under it, and the standard every piece of work here is held to before it leaves the room.",
+      "does": [
+        "UI/UX",
+        "Product design",
+        "Strategy",
+        "Design systems",
+        "Direction"
+      ],
+      "pos": {
+        "x": 36,
+        "y": 8,
+        "r": 2
+      }
+    },
+    {
+      "name": "Akhil",
+      "role": "Creative Lead",
+      "initials": "AK",
+      "bio": "Everything you look at. Project identity, launch creatives, brochures and hoardings. Campaign art that has to hold up on a phone screen and on a forty-foot board.",
+      "does": [
+        "Identity",
+        "Creatives",
+        "Print",
+        "Campaign"
+      ],
+      "pos": {
+        "x": 70,
+        "y": 1,
+        "r": -1.5
+      }
+    },
+    {
+      "name": "Ramnath",
+      "role": "Web & Growth Engineer",
+      "initials": "RA",
+      "bio": "Sites and landing pages when they are needed. And on every single account, the tracking, the lead routing and the weekly numbers that say whether any of it actually worked.",
+      "does": [
+        "Websites",
+        "Landing pages",
+        "Tracking",
+        "Lead ops",
+        "Reporting"
+      ],
+      "pos": {
+        "x": 13,
+        "y": 47,
+        "r": 2.5
+      }
+    },
+    {
+      "name": "Danush",
+      "role": "Content & Social",
+      "initials": "DA",
+      "bio": "Reels, calendars, captions and the community underneath them, plus the day-to-day of the paid social, so the feed never goes quiet on you.",
+      "does": [
+        "Content",
+        "Reels",
+        "Calendars",
+        "Community"
+      ],
+      "pos": {
+        "x": 50,
+        "y": 55,
+        "r": -2
+      }
+    }
+  ]
+}

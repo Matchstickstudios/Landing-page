@@ -1,0 +1,30 @@
+{
+  "services": [
+    "Branding",
+    "Creatives & Promotions",
+    "Social Media",
+    "Meta & Google Ads",
+    "Lead Generation",
+    "Websites"
+  ],
+  "who": [
+    "a builder",
+    "a real-estate agency",
+    "one project",
+    "something else"
+  ],
+  "when": [
+    {
+      "value": "this month",
+      "emoji": "🤩"
+    },
+    {
+      "value": "this quarter",
+      "emoji": "🙂"
+    },
+    {
+      "value": "just planning",
+      "emoji": "🤔"
+    }
+  ]
+}

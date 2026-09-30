@@ -1,0 +1,70 @@
+{
+  "projects": [
+    {
+      "title": "Project launch campaign",
+      "tag": "Launch",
+      "summary": "Everything a new phase needs on day one: a name, a key visual, creatives cut for every placement you buy, and the ads running behind them.",
+      "chips": [
+        "Key visual",
+        "Creative suite",
+        "Meta + Google",
+        "Launch calendar"
+      ]
+    },
+    {
+      "title": "Builder identity system",
+      "tag": "Branding",
+      "summary": "One identity for the company and a repeatable kit, so every project you launch still looks like it came from you.",
+      "chips": [
+        "Logo & mark",
+        "Colour & type",
+        "Usage rules",
+        "Project kit"
+      ]
+    },
+    {
+      "title": "Site-visit lead engine",
+      "tag": "Lead gen",
+      "summary": "Landing page, form, routing and follow-up, tuned so the enquiry reaches a human while they are still interested.",
+      "chips": [
+        "Landing page",
+        "Lead routing",
+        "Follow-up flow",
+        "Weekly report"
+      ]
+    },
+    {
+      "title": "Walkthrough & reel content",
+      "tag": "Content",
+      "summary": "Shoot days at site, walkthroughs and vertical cutdowns, posted against a calendar you can see a month ahead.",
+      "chips": [
+        "Site shoot",
+        "Reels",
+        "Monthly calendar",
+        "Community"
+      ]
+    },
+    {
+      "title": "Hoarding & print suite",
+      "tag": "Creatives",
+      "summary": "Hoardings, standees, brochures and site boards drawn from the same artwork as the digital campaign, so nothing looks borrowed.",
+      "chips": [
+        "Hoardings",
+        "Brochure",
+        "Standees",
+        "Site boards"
+      ]
+    },
+    {
+      "title": "Project microsite",
+      "tag": "Web",
+      "summary": "A fast single-project site with plans, gallery and location, and an enquiry form that hands straight to your sales team.",
+      "chips": [
+        "Fast build",
+        "Plans & gallery",
+        "Enquiry form",
+        "Tracking"
+      ]
+    }
+  ]
+}

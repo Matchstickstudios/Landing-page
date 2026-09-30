@@ -1,0 +1,73 @@
+{
+  "nav": [
+    {
+      "label": "Services",
+      "id": "desk"
+    },
+    {
+      "label": "Work",
+      "id": "work"
+    },
+    {
+      "label": "Our Team",
+      "id": "crew"
+    },
+    {
+      "label": "Why Us",
+      "id": "why"
+    },
+    {
+      "label": "Brief",
+      "id": "brief"
+    }
+  ],
+  "social": [
+    {
+      "name": "Instagram",
+      "url": "https://instagram.com/matchstickstudios"
+    },
+    {
+      "name": "Facebook",
+      "url": "https://facebook.com/matchstickstudios"
+    },
+    {
+      "name": "X",
+      "url": "https://x.com/matchstickstd"
+    },
+    {
+      "name": "LinkedIn",
+      "url": "https://linkedin.com/company/matchstickstudios"
+    }
+  ],
+  "ticker": [
+    "Branding",
+    "Creatives & Promotions",
+    "Social Media",
+    "Meta Ads",
+    "Google Ads",
+    "Lead Generation",
+    "Websites",
+    "Property first, not property only",
+    "Shops · Clinics · Restaurants · Gyms",
+    "Built to be noticed"
+  ],
+  "story": "One room, five people, and work that never leaves the building. Property is where we are sharpest, but the job is the same for a showroom, a clinic or a restaurant: make it impossible to walk past.",
+  "stats": [
+    {
+      "value": "24",
+      "label": "Projects delivered"
+    },
+    {
+      "value": "06",
+      "label": "Services"
+    },
+    {
+      "value": "12",
+      "label": "Brands launched"
+    },
+    {
+      "value": "40",
+      "label": "Campaigns run"
+    }
+  ]
+}

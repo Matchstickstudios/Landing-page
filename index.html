@@ -1758,133 +1758,65 @@ body.ignDone .ignSkip{display:none!important}
    Client rule: headcount, free slots and per-service name-checking stay off
    the page — see the team section for the one place people are named.
    ===================================================================== */
-var NAV=[["Services","desk"],["Work","work"],["Our Team","crew"],["Why Us","why"],["Brief","brief"]];
-var SOCIAL=[["Instagram","https://instagram.com/matchstickstudios"],
-            ["Facebook","https://facebook.com/matchstickstudios"],
-            ["X","https://x.com/matchstickstd"],
-            ["LinkedIn","https://linkedin.com/company/matchstickstudios"]];
+/* =====================================================================
+   The content used to live here as ten literals. It lives in /content/*.json
+   now, so it can be edited in the admin panel and committed by it, and this
+   file stops being the thing anybody has to open to change a sentence.
+   The shapes below are the same ones the render already expects; loadContent()
+   fills them before boot() draws anything.
+   ===================================================================== */
+var NAV=[], SOCIAL=[];
 function socIcon(n){var d={
  Instagram:'<path d="M12 2.2c-2.7 0-3 .01-4.06.06-1.05.05-1.77.22-2.4.46a4.8 4.8 0 0 0-1.75 1.14A4.8 4.8 0 0 0 2.65 5.6c-.24.63-.4 1.35-.46 2.4C2.14 9.05 2.13 9.35 2.13 12s.01 2.95.06 4c.06 1.06.22 1.78.46 2.4a4.8 4.8 0 0 0 1.14 1.76 4.8 4.8 0 0 0 1.75 1.14c.63.24 1.35.4 2.4.46 1.06.05 1.36.06 4.06.06s3-.01 4.06-.06c1.05-.06 1.77-.22 2.4-.46a5 5 0 0 0 2.89-2.9c.24-.62.4-1.34.46-2.39.05-1.06.06-1.36.06-4.01s-.01-2.95-.06-4c-.06-1.06-.22-1.78-.46-2.41a4.8 4.8 0 0 0-1.14-1.75 4.8 4.8 0 0 0-1.75-1.14c-.63-.24-1.35-.41-2.4-.46C15 2.21 14.7 2.2 12 2.2m0 1.8c2.67 0 2.98.01 4 .05.79.04 1.22.17 1.5.28.38.15.65.32.93.6.29.29.46.56.6.94.11.28.24.7.28 1.5.05 1.01.06 1.32.06 3.98 0 2.67-.01 2.98-.06 3.99-.04.8-.17 1.22-.28 1.5a2.5 2.5 0 0 1-.6.93c-.28.29-.55.46-.93.6-.28.11-.71.25-1.5.28-1.02.05-1.33.06-4 .06s-2.98-.01-4-.06c-.79-.03-1.22-.17-1.5-.28a2.5 2.5 0 0 1-.93-.6 2.5 2.5 0 0 1-.6-.93c-.11-.28-.25-.7-.28-1.5-.05-1.01-.06-1.32-.06-3.99 0-2.66.01-2.97.06-3.98.03-.8.17-1.22.28-1.5.14-.38.31-.65.6-.94.28-.28.55-.45.93-.6.28-.11.71-.24 1.5-.28C9.02 4.01 9.33 4 12 4m0 3.06a4.94 4.94 0 1 0 0 9.88 4.94 4.94 0 0 0 0-9.88m0 8.14a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4m6.29-8.34a1.15 1.15 0 1 1-2.3 0 1.15 1.15 0 0 1 2.3 0"/>',
  Facebook:'<path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94"/>',
  X:'<path d="M17.53 3h3.2l-6.99 7.99L22 21h-6.4l-4.6-6.02L5.6 21H2.4l7.3-8.34L2 3h6.4l4.35 5.7zm-1.12 16.06h1.77L7.68 4.84H5.78z"/>',
  LinkedIn:'<path d="M6.94 5.5a2.44 2.44 0 1 1-4.88 0 2.44 2.44 0 0 1 4.88 0M2.4 8.9h4.2V22H2.4zm6.86 0h4.02v1.79h.06c.56-1.02 1.93-2.1 3.98-2.1 4.26 0 5.04 2.63 5.04 6.05V22h-4.19v-6.42c0-1.53-.03-3.5-2.18-3.5-2.18 0-2.51 1.66-2.51 3.39V22H9.26z"/>'};
  return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'+(d[n]||'')+'</svg>';}
-var TICK=["Branding","Creatives & Promotions","Social Media","Meta Ads","Google Ads",
-          "Lead Generation","Websites","Property first, not property only",
-          "Shops \u00b7 Clinics \u00b7 Restaurants \u00b7 Gyms","Built to be noticed"];
+var TICK=[], TEAM=[], CH=[], WORK=[], WHY=[], CREWPOS=[], HUD=[], STORY="";
+var BRIEF={need:[],who:[],when:[]};
+var CONTACT={phone:"+917904888874",whatsapp:"917904888874",email:"matchstickstudios@gmail.com"};
 
-var TEAM=[
- {n:"Rohith", r:"Founder & Client Partner", i:"RO",
-  d:"The first call, and every one after it. Rohith decides what we take on, agrees what it is worth, and stays on your file long after the handshake.",
-  does:["Clients","Strategy","Pitching","Decisions"]},
- {n:"Harikrishnam Raju", r:"Co-founder \u00b7 UI/UX & Strategy Lead", i:"HR",
-  d:"Co-founder, and the person who turns a loose brief into something you can actually see. Senior UI/UX design, the strategy sitting under it, and the standard every piece of work here is held to before it leaves the room.",
-  does:["UI/UX","Product design","Strategy","Design systems","Direction"]},
- {n:"Akhil", r:"Creative Lead", i:"AK",
-  d:"Everything you look at. Project identity, launch creatives, brochures and hoardings. Campaign art that has to hold up on a phone screen and on a forty-foot board.",
-  does:["Identity","Creatives","Print","Campaign"]},
- {n:"Ramnath", r:"Web & Growth Engineer", i:"RA",
-  d:"Sites and landing pages when they are needed. And on every single account, the tracking, the lead routing and the weekly numbers that say whether any of it actually worked.",
-  does:["Websites","Landing pages","Tracking","Lead ops","Reporting"]},
- {n:"Danush", r:"Content & Social", i:"DA",
-  d:"Reels, calendars, captions and the community underneath them, plus the day-to-day of the paid social, so the feed never goes quiet on you.",
-  does:["Content","Reels","Calendars","Community"]}
-];
+/* one fetch per file, in parallel, straight off the same origin the page came
+   from. They are small and static, so the browser cache does the rest. */
+function loadContent(){
+  var names=["site","team","services","projects","why","brief","theme"];
+  return Promise.all(names.map(function(n){
+    return fetch("content/"+n+".json",{cache:"no-cache"})
+      .then(function(r){if(!r.ok)throw new Error(n+": "+r.status);return r.json();});
+  })).then(function(r){
+    var site=r[0],team=r[1],svc=r[2],proj=r[3],why=r[4],brief=r[5],theme=r[6];
 
-/* the desk — six real channels. Crew indices map to TEAM above. */
-var CH=[
- {t:"Branding", k:"Identity",
-  s:"The name, the mark, and the rules that keep every project looking like you.",
-  get:["A logo and mark in every file you will be asked for",
-       "Colour, type and a one-page rule sheet anyone can follow",
-       "An identity kit so each new project still looks like yours"],
-  d30:"Positioning in week one, a first identity route inside three."},
- {t:"Creatives &amp; Promotions", k:"Campaign",
-  s:"Launch artwork that holds up on a phone screen and on a hoarding.",
-  get:["One key visual the whole campaign hangs off",
-       "Creatives cut to every placement you actually buy",
-       "Brochures, standees and hoardings from the same set"],
-  d30:"Key visual signed off, the first full set live inside the month."},
- {t:"Social Media", k:"Always on",
-  s:"A month you can see in advance, posted and replied to by us.",
-  get:["A monthly calendar approved before anything goes out",
-       "Reels, stories and posts designed, written and scheduled",
-       "Comments and DMs answered, real enquiries passed same day"],
-  d30:"A calendar a month ahead, the first shoot at site by week three."},
- {t:"Meta &amp; Google Ads", k:"Paid media",
-  s:"Budget pointed at enquiries, not at likes.",
-  get:["Meta and Google set up properly, tracking in place first",
-       "Creative tested against creative instead of guessed at",
-       "Weekly numbers in plain language, good week or bad"],
-  d30:"Tracking fixed first, then a real cost per enquiry by day thirty."},
- {t:"Lead Generation", k:"Enquiries",
-  s:"The enquiry reaches a human while they are still interested.",
-  get:["A landing page per project, built to be filled in on a phone",
-       "Routing so the right person sees it first, not a shared inbox",
-       "A follow-up flow your sales team can actually work"],
-  d30:"Page live, form tested end to end, leads on a phone in two weeks."},
- {t:"Websites", k:"Build",
-  s:"Fast, clear, and something you can update without calling us.",
-  get:["A company site with a project section you control",
-       "A microsite per project when a launch deserves its own",
-       "Built to open quickly on a phone, on mobile data"],
-  d30:"Sitemap and design agreed in week one, the build yours by week four."}
-];
+    NAV    = (site.nav||[]).map(function(n){return [n.label,n.id];});
+    SOCIAL = (site.social||[]).map(function(s){return [s.name,s.url];});
+    TICK   = site.ticker||[];
+    STORY  = site.story||"";
+    HUD    = (site.stats||[]).map(function(s){return [s.value,s.label];});
 
-/* Capability tiles. Swap in real project names and numbers when you are ready —
-   we have not invented any client names or results here. */
-var WORK=[
- {t:"Project launch campaign",k:"Launch",
-  d:"Everything a new phase needs on day one: a name, a key visual, creatives cut for every placement you buy, and the ads running behind them.",
-  g:["Key visual","Creative suite","Meta + Google","Launch calendar"]},
- {t:"Builder identity system",k:"Branding",
-  d:"One identity for the company and a repeatable kit, so every project you launch still looks like it came from you.",
-  g:["Logo & mark","Colour & type","Usage rules","Project kit"]},
- {t:"Site-visit lead engine",k:"Lead gen",
-  d:"Landing page, form, routing and follow-up, tuned so the enquiry reaches a human while they are still interested.",
-  g:["Landing page","Lead routing","Follow-up flow","Weekly report"]},
- {t:"Walkthrough & reel content",k:"Content",
-  d:"Shoot days at site, walkthroughs and vertical cutdowns, posted against a calendar you can see a month ahead.",
-  g:["Site shoot","Reels","Monthly calendar","Community"]},
- {t:"Hoarding & print suite",k:"Creatives",
-  d:"Hoardings, standees, brochures and site boards drawn from the same artwork as the digital campaign, so nothing looks borrowed.",
-  g:["Hoardings","Brochure","Standees","Site boards"]},
- {t:"Project microsite",k:"Web",
-  d:"A fast single-project site with plans, gallery and location, and an enquiry form that hands straight to your sales team.",
-  g:["Fast build","Plans & gallery","Enquiry form","Tracking"]}
-];
+    TEAM    = (team.members||[]).map(function(m){
+      return {n:m.name,r:m.role,i:m.initials,d:m.bio,does:m.does||[]};});
+    CREWPOS = (team.members||[]).map(function(m){
+      return m.pos||{x:0,y:0,r:0};});
 
-var WHY=[
- {t:"No layers, no handoffs", x:2, y:2, r:-3,
-  d:"The person you brief is the person doing the work. Nothing is passed down to someone you have never met, because there is nobody to pass it to."},
- {t:"Sharpest on property", x:37, y:12, r:2,
-  d:"We think in site visits, walk-ins and launch dates, because property does not behave like retail. That same thinking travels. A showroom, a clinic or a gym gets the walk-ins version of it."},
- {t:"Creative and media together", x:68, y:26, r:-1.5,
-  d:"Whoever makes the creative also watches it run. When something underperforms it gets changed that week, not next quarter."},
- {t:"Small on purpose", x:14, y:52, r:3,
-  d:"We take on a few projects at a time so each one gets the attention it was sold with. When we are full, we will say so."}
-];
+    CH   = (svc.services||[]).map(function(c){
+      return {t:c.title,k:c.kicker,s:c.summary,get:c.get||[],d30:c.first30};});
+    WORK = (proj.projects||[]).map(function(p){
+      return {t:p.title,k:p.tag,d:p.summary,g:p.chips||[]};});
+    WHY  = (why.reasons||[]).map(function(w){
+      return {t:w.title,d:w.body,x:w.x,y:w.y,r:w.r};});
 
-/* where each plate lands in the scatter the reasons vacated, as a percentage
-   of the field. Five positions, hand-placed so no card covers another's name. */
-var CREWPOS=[{x:1,y:0,r:-3},{x:36,y:8,r:2},{x:70,y:1,r:-1.5},
-             {x:13,y:47,r:2.5},{x:50,y:55,r:-2}];
-var HUD=[["24","Projects delivered"],["06","Services"],["12","Brands launched"],["40","Campaigns run"]];
-var STORY="One room, five people, and work that never leaves the building. Property is where we are "
- +"sharpest, but the job is the same for a showroom, a clinic or a restaurant: make it "
- +"impossible to walk past.";
-var BRIEF={
-  /* the same six services the rest of the page sells, so a picked service maps
-     straight onto a section the reader has already seen */
-  need:["Branding","Creatives & Promotions","Social Media","Meta & Google Ads",
-        "Lead Generation","Websites"],
-  who:["a builder","a real-estate agency","one project","something else"],
-  /* the third question is a feeling as much as a date, so each answer
-     carries the face that goes with it. The emoji is decoration only:
-     data-v on the button is what the sentence and the enquiry read. */
-  when:[{v:"this month",e:"🤩"},{v:"this quarter",e:"🙂"},{v:"just planning",e:"🤔"}]
-};
+    BRIEF = {need:brief.services||[],who:brief.who||[],
+             when:(brief.when||[]).map(function(o){return {v:o.value,e:o.emoji};})};
 
+    /* the palette is a set of custom properties, so a colour change is a
+       one-line write rather than a rebuild */
+    if(theme&&theme.colors){
+      var root=document.documentElement;
+      Object.keys(theme.colors).forEach(function(k){
+        root.style.setProperty("--"+k,theme.colors[k]);});
+    }
+    if(theme&&theme.contact)CONTACT=theme.contact;
+  });
+}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
 
@@ -2900,7 +2832,18 @@ function boot(){
   ignite();
   onScroll(); movePill();
 }
-boot();
+/* nothing is drawn from an empty array: the content arrives first, and a
+   failure says so on the page rather than rendering a hollow site. */
+loadContent().then(boot).catch(function(e){
+  document.getElementById("app").innerHTML=
+    '<div style="padding:26vh 8vw;font:500 16px/1.6 system-ui;color:#9B958C">'
+   +'<p style="color:#FF5F1F;font-weight:700;margin:0 0 10px">Content did not load.</p>'
+   +'<p style="margin:0">'+String(e.message||e)+'</p>'
+   +'<p style="margin:14px 0 0;font-size:13px">If you are opening this file straight '
+   +'from disk, a browser will not fetch the JSON beside it. Run a local server '
+   +'(<code>python3 -m http.server</code>) or open the deployed site.</p></div>';
+  document.body.classList.add("lit");
+});
 </script>
 </body>
 </html>

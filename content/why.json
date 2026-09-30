@@ -1,0 +1,32 @@
+{
+  "reasons": [
+    {
+      "title": "No layers, no handoffs",
+      "body": "The person you brief is the person doing the work. Nothing is passed down to someone you have never met, because there is nobody to pass it to.",
+      "x": 2,
+      "y": 2,
+      "r": -3
+    },
+    {
+      "title": "Sharpest on property",
+      "body": "We think in site visits, walk-ins and launch dates, because property does not behave like retail. That same thinking travels. A showroom, a clinic or a gym gets the walk-ins version of it.",
+      "x": 37,
+      "y": 12,
+      "r": 2
+    },
+    {
+      "title": "Creative and media together",
+      "body": "Whoever makes the creative also watches it run. When something underperforms it gets changed that week, not next quarter.",
+      "x": 68,
+      "y": 26,
+      "r": -1.5
+    },
+    {
+      "title": "Small on purpose",
+      "body": "We take on a few projects at a time so each one gets the attention it was sold with. When we are full, we will say so.",
+      "x": 14,
+      "y": 52,
+      "r": 3
+    }
+  ]
+}
