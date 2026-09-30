@@ -1,0 +1,13 @@
+{
+  "name": "matchstick-site",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tinacms dev -c \"python3 -m http.server 3000\"",
+    "build": "tinacms build"
+  },
+  "devDependencies": {
+    "@tinacms/cli": "^1.6.0",
+    "tinacms": "^2.2.0"
+  }
+}
