@@ -111,7 +111,7 @@ insert into brief_options (question, value, emoji, sort) values ('when', 'just p
 -- ---------- settings, one row ----------
 insert into settings (id, story, stats, colors, phone, whatsapp, email, site_url) values (
   1, 'One room, five people, and work that never leaves the building. Property is where we are sharpest, but the job is the same for a showroom, a clinic or a restaurant: make it impossible to walk past.', '[{"value":"24","label":"Projects delivered"},{"value":"06","label":"Services"},{"value":"12","label":"Brands launched"},{"value":"40","label":"Campaigns run"}]'::jsonb, '{"soot":"#07070A","soot2":"#0D0E12","panel":"#12131A","ash":"#F0EAE0","ash2":"#9B958C","ash3":"#837F79","ember":"#FF5F1F","flame":"#FFB13D","gold":"#FFD98A","deep":"#C0261A","cool":"#4C7FA8"}'::jsonb,
-  '+917904888874', '917904888874', 'matchstickstudios@gmail.com', 'https://REPLACE-ME.github.io/matchstick-site')
+  '+917904888874', '917904888874', 'matchstickstudios@gmail.com', 'https://matchstickstudios.github.io/Landing-page')
 on conflict (id) do update set
   story = excluded.story, stats = excluded.stats, colors = excluded.colors,
   phone = excluded.phone, whatsapp = excluded.whatsapp, email = excluded.email,
