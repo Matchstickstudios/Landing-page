@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Studio — Matchstick</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#07070A">
+<link rel="stylesheet" href="studio.css">
+</head>
+<body>
+
+<!-- signed out -->
+<div id="login" class="login" hidden>
+  <h1>Studio</h1>
+  <p class="sub">Sign in to edit the site.</p>
+  <form id="loginForm">
+    <div class="f">
+      <label for="em">Email</label>
+      <input class="inp" id="em" type="email" autocomplete="username" required>
+    </div>
+    <div class="f">
+      <label for="pw">Password</label>
+      <input class="inp" id="pw" type="password" autocomplete="current-password" required>
+    </div>
+    <div class="f"><button class="btn" style="width:100%;justify-content:center" type="submit">Sign in</button></div>
+    <p class="err" id="loginErr"></p>
+  </form>
+</div>
+
+<!-- signed in -->
+<div id="app" hidden>
+  <header class="bar">
+    <div class="wrap">
+      <div class="barIn">
+        <span class="logo">MATCHSTICK <span>studio</span></span>
+        <span class="spacer"></span>
+        <span class="who" id="who"></span>
+        <button class="btn gho sm" id="out">Sign out</button>
+      </div>
+      <nav class="tabs" id="tabs"></nav>
+    </div>
+  </header>
+  <main class="wrap" id="view"></main>
+</div>
+
+<div id="boot" class="login"><p class="sub">Connecting…</p><p class="err" id="bootErr"></p></div>
+
+<div class="saveBar" id="saveBar">
+  <div class="wrap saveIn">
+    <span class="msg" id="saveMsg"></span>
+    <button class="btn gho sm" id="discard">Discard</button>
+    <button class="btn" id="save">Save</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="studio.js"></script>
+</body>
+</html>
