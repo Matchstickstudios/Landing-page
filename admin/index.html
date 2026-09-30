@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#07070A">
 <link rel="icon" type="image/png" sizes="64x64" href="../assets/favicon.png">
-<link rel="stylesheet" href="studio.css?v=muoiag69">
+<link rel="stylesheet" href="studio.css?v=muoik543">
 </head>
 <body>
 
@@ -76,23 +76,20 @@
         <button class="btn gho sm" id="out">Sign out</button>
       </div>
       <nav class="tabs" id="tabs"></nav>
+      <div class="editBar" id="saveBar">
+        <button class="btn gho sm icon" id="undo" title="Undo (&#8984;Z)" aria-label="Undo" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+        <button class="btn gho sm icon" id="redo" title="Redo (&#8984;&#8679;Z)" aria-label="Redo" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+        <span class="msg" id="saveMsg"></span>
+        <button class="btn gho sm" id="cancelAll" disabled>Cancel changes</button>
+        <button class="btn gho sm" id="savePreview">Preview</button>
+        <button class="btn sm" id="save" disabled>Save</button>
+      </div>
     </div>
   </header>
   <main class="wrap" id="view"></main>
 </div>
 
 <div id="boot" class="login"><p class="sub">Connecting…</p><p class="err" id="bootErr"></p></div>
-
-<div class="saveBar" id="saveBar">
-  <div class="wrap saveIn">
-    <button class="btn gho sm icon" id="undo" title="Undo" aria-label="Undo" disabled>&#8630;</button>
-    <button class="btn gho sm icon" id="redo" title="Redo" aria-label="Redo" disabled>&#8631;</button>
-    <span class="msg" id="saveMsg"></span>
-    <button class="btn gho sm" id="cancelAll" disabled>Cancel changes</button>
-    <button class="btn gho sm" id="savePreview">Save &amp; preview</button>
-    <button class="btn" id="save">Save</button>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -109,6 +106,6 @@
   </div>
 </div>
 
-<script type="module" src="studio.js?v=muoiag69"></script>
+<script type="module" src="studio.js?v=muoik543"></script>
 </body>
 </html>

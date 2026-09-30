@@ -254,10 +254,11 @@ function showSaveBar() {
   const n = pending();
   const bar = $("#saveBar");
   if (!bar) return;
-  bar.classList.add("on");
-  $("#saveMsg").textContent =
+  const msg = $("#saveMsg");
+  msg.textContent =
     n > 0 ? `${n} unsaved change${n === 1 ? "" : "s"}`
           : (history.length ? "All changes saved" : "No changes yet");
+  msg.classList.toggle("dirty", n > 0);
   const save = $("#save"), sp = $("#savePreview");
   if (save) save.disabled = n === 0;
   if (sp) sp.textContent = n > 0 ? "Save & preview" : "Preview";

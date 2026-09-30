@@ -112,20 +112,7 @@ tbody tr:hover{background:rgba(240,234,224,.03)}
 .login h1{font-size:24px}
 .err{color:#ff8f7a;font-size:13px;margin-top:10px;min-height:18px}
 
-/* ---------- save bar ---------- */
-.saveBar{position:fixed;left:0;right:0;bottom:0;z-index:30;
-  background:rgba(13,14,18,.96);backdrop-filter:blur(14px);
-  border-top:1px solid var(--line);transform:translateY(110%);
-  transition:transform .35s var(--ease)}
-.saveBar.on{transform:none}
-.saveIn{display:flex;align-items:center;gap:12px;padding:12px 0}
-.saveIn .msg{flex:1;font-size:13px;color:var(--ash2)}
 
-.toast{position:fixed;left:50%;bottom:86px;transform:translate(-50%,14px);z-index:40;
-  padding:11px 20px;border-radius:100px;background:#160F0B;border:1px solid rgba(255,95,31,.4);
-  font-size:13px;opacity:0;pointer-events:none;transition:.3s var(--ease)}
-.toast.on{opacity:1;transform:translate(-50%,0)}
-.toast.bad{border-color:rgba(192,38,26,.6);color:#ff8f7a}
 
 .note{border:1px solid var(--line);border-left:2px solid var(--ember);border-radius:0 10px 10px 0;
   padding:13px 16px;background:rgba(255,95,31,.05);font-size:13px;color:var(--ash2);margin-bottom:20px}
@@ -216,4 +203,33 @@ tbody tr:hover{background:rgba(240,234,224,.03)}
   .saveIn .msg{order:-1;width:100%;font-size:12.5px}
   .saveIn .btn{flex:1 1 auto;justify-content:center}
   .saveIn .btn.icon{flex:0 0 auto}
+}
+
+
+/* ---------- the edit row in the header ----------
+   It used to be a bar that rose from the bottom once you had changed
+   something, which meant undo and redo did not exist until you needed them
+   and nobody knew they were there. It is part of the header now: always on
+   screen, disabled until there is something to act on. */
+.editBar{display:flex;align-items:center;gap:8px;padding:9px 0 10px;
+  border-top:1px solid var(--line);margin-top:10px}
+.editBar .msg{flex:1;font-size:12.5px;color:var(--ash3);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.editBar .msg.dirty{color:var(--flame)}
+.btn.icon{min-width:36px;padding:7px 9px;line-height:0}
+.btn.icon svg{width:17px;height:17px;display:block}
+.btn[disabled]{opacity:.38;cursor:not-allowed}
+.btn.gho[disabled]:hover{background:none}
+.btn[disabled]:hover{filter:none;box-shadow:none}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,14px);z-index:40;
+  padding:11px 20px;border-radius:100px;background:#160F0B;border:1px solid rgba(255,95,31,.4);
+  font-size:13px;opacity:0;pointer-events:none;transition:.3s var(--ease)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.bad{border-color:rgba(192,38,26,.6);color:#ff8f7a}
+
+@media(max-width:760px){
+  .editBar{flex-wrap:wrap;gap:6px}
+  .editBar .msg{order:-1;flex:1 0 100%;white-space:normal}
+  .editBar .btn:not(.icon){flex:1 1 auto;justify-content:center}
 }
