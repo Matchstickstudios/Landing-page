@@ -17,6 +17,10 @@
       "id": "why"
     },
     {
+      "label": "Writing",
+      "id": "/blog/"
+    },
+    {
       "label": "Brief",
       "id": "brief"
     }
@@ -69,5 +73,6 @@
       "value": "40",
       "label": "Campaigns run"
     }
-  ]
+  ],
+  "url": "https://REPLACE-ME.github.io/matchstick-site"
 }

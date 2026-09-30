@@ -1,0 +1,73 @@
+# Builds the site and publishes it to GitHub Pages on every push to main.
+#
+# Two things get built:
+#   1. the blog pages, the sitemap and robots.txt, from content/blog/*.md
+#   2. the Tina admin, so /admin/ works on the live site
+#
+# The admin build needs a TinaCloud project. Without those secrets the step is
+# skipped and everything else still publishes, so the site is never held
+# hostage to the CMS being set up.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # lifted to the job so the "skip if unset" check below can read them
+      TINA_CLIENT_ID: ${{ secrets.TINA_CLIENT_ID }}
+      TINA_TOKEN: ${{ secrets.TINA_TOKEN }}
+      TINA_SEARCH_TOKEN: ${{ secrets.TINA_SEARCH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+        id: pages
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build the blog, sitemap and robots.txt
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: node build.mjs
+
+      - name: Build the Tina admin
+        if: env.TINA_CLIENT_ID != ''
+        run: npx tinacms build
+
+      - name: Drop what the site does not need
+        run: rm -rf node_modules .github tina/__generated__
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

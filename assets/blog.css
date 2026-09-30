@@ -1,0 +1,66 @@
+/* Blog pages. The palette, the fonts and the furniture all come from
+   site.css; this is only the things a page of prose needs that a landing
+   page never did. */
+.bWrap{max-width:720px;margin:0 auto;
+  padding-left:max(clamp(18px,4vw,46px),env(safe-area-inset-left,0px));
+  padding-right:max(clamp(18px,4vw,46px),env(safe-area-inset-right,0px))}
+.bTop{padding:calc(96px + env(safe-area-inset-top,0px)) 0 0}
+.bBack{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash3);
+  transition:color .3s var(--ease)}
+.bBack:hover{color:var(--flame)}
+.bBack i{font-style:normal;color:var(--ember)}
+
+.pHead{padding:26px 0 30px;border-bottom:1px solid var(--line);margin-bottom:34px}
+.pMeta{display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ash3);margin-bottom:16px}
+.pTag{padding:5px 11px;border-radius:100px;border:1px solid var(--line);color:var(--flame)}
+.pTitle{font-family:var(--ff-display);font-weight:900;letter-spacing:-.025em;line-height:1.02;
+  font-size:clamp(30px,5.4vw,52px);margin:0}
+.pLede{color:var(--ash2);font-size:clamp(15px,1.5vw,18px);line-height:1.6;margin:16px 0 0;max-width:56ch}
+.pCover{width:100%;border-radius:20px;border:1px solid var(--line);margin:30px 0 0}
+
+/* the prose itself */
+.prose{font-size:clamp(15.5px,1.4vw,17px);line-height:1.75;color:var(--ash2);padding-bottom:70px}
+.prose>*+*{margin-top:1.15em}
+.prose h2{font-family:var(--ff-display);font-weight:800;letter-spacing:-.015em;
+  color:var(--ash);font-size:clamp(21px,2.5vw,29px);line-height:1.15;margin-top:2em}
+.prose h3{font-family:var(--ff-display);font-weight:700;color:var(--ash);
+  font-size:clamp(18px,2vw,22px);margin-top:1.7em}
+.prose strong{color:var(--ash);font-weight:700}
+.prose a{color:var(--flame);border-bottom:1px solid rgba(255,95,31,.42)}
+.prose a:hover{color:var(--ember)}
+.prose ul,.prose ol{padding-left:22px}
+.prose li+li{margin-top:.5em}
+.prose li::marker{color:var(--ember)}
+.prose blockquote{border-left:2px solid var(--ember);padding:2px 0 2px 20px;
+  color:var(--ash);font-family:var(--ff-body);font-style:italic}
+.prose code{font-family:"JetBrains Mono",monospace;font-size:.88em;color:var(--flame);
+  background:rgba(255,95,31,.1);padding:2px 6px;border-radius:6px}
+.prose pre{background:var(--soot2);border:1px solid var(--line);border-radius:14px;
+  padding:18px;overflow-x:auto}
+.prose pre code{background:none;color:var(--ash2);padding:0}
+.prose img{width:100%;border-radius:16px;border:1px solid var(--line)}
+.prose hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
+
+/* the index */
+.bList{display:grid;gap:16px;padding:6px 0 70px}
+.bCard{display:block;padding:clamp(22px,2.4vw,30px);border-radius:20px;
+  border:1px solid var(--line);
+  background:linear-gradient(158deg,rgba(240,234,224,.055),rgba(240,234,224,.012) 62%);
+  transition:border-color .45s var(--ease),background .45s var(--ease),transform .45s var(--ease)}
+.bCard:hover{border-color:rgba(255,95,31,.34);transform:translateY(-3px);
+  background:linear-gradient(158deg,rgba(255,95,31,.075),rgba(240,234,224,.012) 62%)}
+.bCard h2{font-family:var(--ff-display);font-weight:800;color:var(--ash);margin:10px 0 0;
+  font-size:clamp(19px,2.1vw,25px);line-height:1.12;letter-spacing:-.01em}
+.bCard p{color:var(--ash2);margin:11px 0 0;font-size:14.5px;line-height:1.6}
+.bEmpty{color:var(--ash3);padding:40px 0 80px}
+@media(hover:none){.bCard:hover{transform:none}}
+
+/* the page foot */
+.bFoot{border-top:1px solid var(--line);padding:26px 0 40px;
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ash3);
+  display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.bFoot a:hover{color:var(--flame)}

@@ -1,5 +1,7 @@
-node_modules
-node_modules/
-admin/
-tina/__generated__/
 .DS_Store
+admin/
+blog/
+node_modules/
+robots.txt
+sitemap.xml
+tina/__generated__/
