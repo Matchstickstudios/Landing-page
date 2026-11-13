@@ -480,6 +480,58 @@ const VIEWS = {
     },
   },
 
+  chrome: {
+    label: "Header & footer",
+    async render(view) {
+      const s = DATA.settings[0];
+      view.append(el("h1", {}, "Header & footer"),
+        el("p", { class: "sub" }, "The bar across the top of every screen and the foot of the page: the logo and the words beside it, the button, the big footer word, the copyright line, and the phone, email and WhatsApp the footer shows."));
+
+      if (!("labels" in s)) {
+        view.append(el("p", { class: "err" },
+          "One-time setup: run supabase/004_header_footer.sql in the Supabase SQL editor, then reload this page. Until then the wording below can't be saved (the phone, email and logo still can)."));
+      }
+      /* the same words the site falls back to when nothing has been set */
+      const DEF = { logo_name: "Matchstick", logo_sub: "Studios", header_button: "Contact us",
+        footer_word: "Matchstick", copyright: "© 2026 Matchstick Studios",
+        wa_message: "Hi Matchstick, I would like to talk about a project." };
+      const cur = (k) => (s.labels && typeof s.labels[k] === "string") ? s.labels[k] : DEF[k];
+      const put = (k) => (v) => setField("settings", s, "labels", { ...(s.labels || {}), [k]: v });
+      const can = "labels" in s;
+      const lab = (k, opts) => { const n = text(cur(k), put(k), opts); if (!can) n.disabled = true; return n; };
+
+      view.append(el("h1", { style: "font-size:16px;margin-top:22px" }, "Header"));
+      const h = el("div", { class: "card" });
+      h.append(field("Logo", "Shown in the bar and at the top of the phone menu. A transparent PNG or an SVG.",
+        imageField(s.logo, setter("settings", s)("logo"),
+          { prefix: "logo", note: "Leave it empty to keep the matchstick the site was drawn with." })));
+      const hgt = num(+(s.labels && s.labels.logo_height) || 38,
+        (v) => put("logo_height")(Math.max(20, Math.min(80, Math.round(v)))));
+      hgt.step = "1"; hgt.min = "20"; hgt.max = "80"; if (!can) hgt.disabled = true;
+      h.append(field("Logo height", "In pixels, 20 to 80. The site was built at 38. The bar is 60 tall, so 52 is about the most that fits; phones shrink it to fit.", hgt));
+      h.append(el("div", { class: "row" },
+        field("Name beside the logo", "Empty it to hide it, e.g. when the logo picture already spells the name.", lab("logo_name")),
+        field("Small line under the name", "Empty it to hide it.", lab("logo_sub"))));
+      h.append(field("Button on the right", "Also the button at the bottom of the phone menu. It jumps to the brief.", lab("header_button")));
+      view.append(h);
+      view.append(el("p", { class: "sub" }, "The menu links themselves are under Site → Navigation."));
+
+      view.append(el("h1", { style: "font-size:16px;margin-top:26px" }, "Footer"));
+      const f = el("div", { class: "card" });
+      f.append(el("div", { class: "row" },
+        field("Big word across the footer", "One short word fits best on phones. Empty it to hide it.", lab("footer_word")),
+        field("Copyright line", null, lab("copyright"))));
+      const m = setter("settings", s);
+      f.append(el("div", { class: "row" },
+        field("Phone", "Shown in the footer and used by every Call button, e.g. +91 82963 03791.", text(s.phone, m("phone"))),
+        field("WhatsApp", "With country code, e.g. 918296303791. Used by every WhatsApp button.", text(s.whatsapp, m("whatsapp"))),
+        field("Email", "Shown in the footer and used by the Email button.", text(s.email, m("email")))));
+      f.append(field("WhatsApp button · first message", "What the floating WhatsApp button opens with.", lab("wa_message", { area: true })));
+      view.append(f);
+      view.append(el("p", { class: "sub" }, "The social icons are under Site → Social."));
+    },
+  },
+
   team: {
     label: "Team",
     async render(view) {
@@ -613,7 +665,7 @@ const VIEWS = {
 
       const m = setter("settings", s);
       view.append(el("div", { class: "card" }, el("div", { class: "row" },
-        field("Phone", "Used for the call link.", text(s.phone, m("phone"))),
+        field("Phone", "Used for the call link and shown in the footer.", text(s.phone, m("phone"))),
         field("WhatsApp", "Country code, no +.", text(s.whatsapp, m("whatsapp"))),
         field("Email", null, text(s.email, m("email"))))));
     },
